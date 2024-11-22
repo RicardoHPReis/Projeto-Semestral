@@ -3,10 +3,12 @@ import time as t
 import logging as l
 import hashlib as h
 import threading as th
-import numpy as n
+import numpy as np
 import pyblas.level1 as blas
 import scipy as sp
 import scipy.linalg as la
+#import torch as tc
+import csv
 import os
 
 
@@ -20,10 +22,7 @@ class Servidor:
         self.__TAM_BUFFER = 2048
         self.__ENDERECO_IP = (self.__NOME_DO_SERVER, self.__PORTA_DO_SERVER)
         
-        self.__clientes = []
-        
-        
-        self.__clientes = []        
+        self.__clientes = []    
 
         self.__server_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.__server_socket.bind(self.__ENDERECO_IP)
@@ -177,12 +176,39 @@ class Servidor:
         return checksum.hexdigest()
         
         
+    def calcular_CGNE():
+        g = []
+        matriz = np.array([])
+        matriz_trans = []
+        f0 = 0
+        r0 = g - matriz*f0
+        p0 = matriz_trans * r0
+        for i in range(0,1000):
+            matriz
+        
+        
+    def calcular_CGNR():
+        g = []
+        matriz = []
+        matriz_trans = []
+        f0 = 0
+        r0 = g - matriz*f0
+        p0 = matriz_trans * r0
+        for i in range(0,1000):
+            matriz
+        
     def enviar_arquivo(self, cliente_socket:s.socket, endereco:tuple):
         nome_arquivo: str = self.retornar_nome_arquivos(cliente_socket, endereco)
-        num_pacotes: int = (os.path.getsize(os.path.join("./Arquivos", nome_arquivo)) // self.__TAM_BUFFER) + 1
+        num_pacotes: int = (os.path.getsize(os.path.join("./images", nome_arquivo)) // self.__TAM_BUFFER) + 1
         num_digitos: int = len(str(num_pacotes))
         num_buffer: int = num_digitos + 1 + 16 + 1 + self.__TAM_BUFFER
         checksum: str = self.checksum_arquivo(nome_arquivo)
+        
+        matriz = np.matrix()
+        with open(os.path.join("./Arquivos", nome_arquivo), 'r') as file:
+            csvFile = csv.reader(file)
+            for lines in csvFile:
+                print(lines)
 
         self.mensagem_envio(cliente_socket, endereco, f"OK-2-{num_pacotes}-{num_digitos}-{num_buffer}-{checksum}")
         inicio = self.mensagem_recebimento(cliente_socket, endereco).split("-")
