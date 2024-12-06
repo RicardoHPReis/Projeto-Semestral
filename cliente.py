@@ -156,7 +156,7 @@ class Cliente:
         self.mensagem_envio("OK-1-Confirmação")
         
         if(dados[0] == "OK"):
-            os.makedirs("./Recebidos", exist_ok=True)
+            os.makedirs("./download", exist_ok=True)
             
             num_pacotes = int(dados[2])
             num_digitos = int(dados[3])
@@ -167,7 +167,7 @@ class Cliente:
             hash_final = hash_inicio + 16
             checksum_completo = h.md5()
             
-            with open(os.path.join("./Recebidos", nome_arquivo), "wb") as arquivo:
+            with open(os.path.join("./download", nome_arquivo), "wb") as arquivo:
                 for i in range(0, num_pacotes):
                     packet = self.__conexao_socket.recv(tam_buffer)
 

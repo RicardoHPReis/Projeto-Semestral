@@ -169,13 +169,28 @@ class Servidor:
         
     def checksum_arquivo(self, nome_arquivo: str) -> str:
         checksum = h.md5()
-        with open(os.path.join("./Arquivos", nome_arquivo), "rb") as file:
+        with open(os.path.join("./images", nome_arquivo), "rb") as file:
             while data := file.read(self.__TAM_BUFFER):
                 checksum.update(data)
 
         return checksum.hexdigest()
+    
+    
+    def dot_matriz(matriz_1:np.ndarray, matriz_2:np.ndarray) -> np.ndarray:
+        tam_1 = matriz_1.shape
+        tam_2 = matriz_2.shape
         
+        if matriz_1.ndim < 2:
+            tam_1 = (0, tam_1[0])
+        if matriz_2.ndim < 2:
+            tam_2 = (0, tam_2[0])
         
+        if tam_1[1] != tam_2[0]:
+            raise ValueError
+        else:
+            return matriz_1 @ matriz_2
+    
+    
     def calcular_CGNE():
         g = []
         matriz = np.array([])
@@ -196,7 +211,8 @@ class Servidor:
         p0 = matriz_trans * r0
         for i in range(0,1000):
             matriz
-        
+    
+    
     def enviar_arquivo(self, cliente_socket:s.socket, endereco:tuple):
         nome_arquivo: str = self.retornar_nome_arquivos(cliente_socket, endereco)
         num_pacotes: int = (os.path.getsize(os.path.join("./images", nome_arquivo)) // self.__TAM_BUFFER) + 1
@@ -204,8 +220,8 @@ class Servidor:
         num_buffer: int = num_digitos + 1 + 16 + 1 + self.__TAM_BUFFER
         checksum: str = self.checksum_arquivo(nome_arquivo)
         
-        matriz = np.matrix()
-        with open(os.path.join("./Arquivos", nome_arquivo), 'r') as file:
+        #matriz = np.matrix()
+        with open(os.path.join("./images", nome_arquivo), 'r') as file:
             csvFile = csv.reader(file)
             for lines in csvFile:
                 print(lines)
@@ -215,7 +231,7 @@ class Servidor:
         if inicio[0] != "OK":
             return
 
-        with open(os.path.join("./Arquivos", nome_arquivo), "rb") as arquivo:
+        with open(os.path.join("./images", nome_arquivo), "rb") as arquivo:
             i = 0
             while data := arquivo.read(self.__TAM_BUFFER):
                 hash_ = h.md5(data).digest()
