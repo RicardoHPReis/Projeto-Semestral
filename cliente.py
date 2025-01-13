@@ -4,17 +4,23 @@ import logging as l
 import hashlib as h
 import threading as th
 import numpy as n
-import pyblas.level1 as blas
-import scipy as sp
-import scipy.linalg as la
+import Cryptodome.Random as r
+import Cryptodome.Random.random as ri
+import random 
+import csv
 import os
 
-
+modelos_possiveis = ["Modelo 1", "Modelo 2"]
+sinais_modelo_1_possiveis = ["Imagem 1 60x60", "Imagem 2 60x60", "Imagem 3 60x60"]
+sinais_modelo_2_possiveis = ["Imagem 1 30x30", "Imagem 2 30x30", "Imagem 3 30x30"]
 class Cliente:
     def __init__(self):
         self.logger = l.getLogger(__name__)
         l.basicConfig(filename="./log/cliente.log", encoding="utf-8", level=l.INFO, format="%(levelname)s - %(asctime)s: %(message)s")
-        
+        self.__NOME_DO_USUARIO = ''
+        self.__GANHO_DE_SINAL = ''
+        self.__MODELO_IMAGEM = ''
+
         self.__NOME_DO_SERVER = '127.0.0.1'
         self.__PORTA_DO_SERVER = 6000
         self.__ENDERECO_IP = (self.__NOME_DO_SERVER, self.__PORTA_DO_SERVER)
@@ -52,6 +58,13 @@ class Cliente:
         except:
             self.logger.error(f"Removido do Servidor: {self.__ENDERECO_IP}")
             self.__conexao_socket.close()
+
+    def usuario_inicializar(self):
+        self.__NOME_DO_USUARIO = r.get_random_bytes(16).hex()
+        self.__MODELO_IMAGEM = ri.choice(modelos_possiveis)
+        if(self.__MODELO_IMAGEM == "Modelo-1"):
+            self.__GANHO_DE_SINAL = ri.choice(sinais_modelo_1_possiveis)
+        self.__GANHO_DE_SINAL = ri.choice(sinais_modelo_2_possiveis)
 
 
     def inicializar(self):
@@ -228,6 +241,7 @@ class Cliente:
         os.system('cls' if os.name == 'nt' else 'clear')
 
         iniciar_conexao = self.inicializar()
+        iniciar_usuario = self.usuario_inicializar()
         self.__conexao_socket.connect(self.__ENDERECO_IP)
 
         try:
