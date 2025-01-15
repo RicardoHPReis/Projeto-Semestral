@@ -6,9 +6,8 @@ import threading as th
 import numpy as n
 import Cryptodome.Random as r
 import Cryptodome.Random.random as ri
-import random 
-import csv
 import os
+from numpy import sqrt
 
 modelos_possiveis = ["Modelo 1", "Modelo 2"]
 sinais_modelo_1_possiveis = ["Imagem 1 60x60", "Imagem 2 60x60", "Imagem 3 60x60"]
@@ -65,7 +64,23 @@ class Cliente:
         if(self.__MODELO_IMAGEM == "Modelo-1"):
             self.__GANHO_DE_SINAL = ri.choice(sinais_modelo_1_possiveis)
         self.__GANHO_DE_SINAL = ri.choice(sinais_modelo_2_possiveis)
+        self.__GANHO_DE_SINAL = self.aplicar_ganho_sinal(self.__GANHO_DE_SINAL)
 
+    def aplicar_ganho_sinal(self):
+        g = n.read_csv("images/" + self.__MODELO_IMAGEM + self.__GANHO_DE_SINAL + ".csv", header=None).to_numpy().flatten()  
+        N = 64
+        S = 794 if self.__MODELO_IMAGEM == "H-1" else 436
+
+        if len(g) != N * S:
+            print(self.__GANHO_DE_SINAL)
+            raise ValueError(f"Tamanho de g ({len(g)}) não corresponde ao esperado ({N} x {S} = {N * S})")
+
+        for c in range(N):
+            for l in range(S):
+                y = 100 + (1 / 20) * l * sqrt(l)
+                g[l + c * S] = g[l + c * S] * y  
+
+        return g
 
     def inicializar(self):
         inicializar = ''
@@ -151,7 +166,6 @@ class Cliente:
                 
         return nome_arquivo
 
-
     def descriptografar_arquivo(self, pacote : bytes, hash_inicio : int, hash_final : int) -> tuple[bytes, bytes, bytes]:
         nr_pacote = pacote[0:3]
         parte_checksum = pacote[hash_inicio:hash_final]
@@ -159,6 +173,25 @@ class Cliente:
 
         return nr_pacote, parte_checksum, data
 
+    def reconstruir_arquivo(self):
+        data = {
+            'nome_usuario': '',
+            'modelo_imagem': '',
+            'ganho_sinal': '',
+        }
+
+        data['nome_usuario'] = self.__NOME_DO_USUARIO
+        data['modelo_imagem'] = self.__MODELO_IMAGEM
+        data['ganho_sinal'] = self.__GANHO_DE_SINAL
+
+        self.mensagem_envio(f'OK-8-Reconstruir Arquivo-{data}')
+        resposta = self.mensagem_recebimento().split("-")
+
+        if resposta[0] == "OK":
+            return
+        else:
+            return
+        
 
     def requisitar_arquivo(self):
         nome_arquivo = self.escolher_arquivo()
@@ -225,11 +258,12 @@ class Cliente:
         opcao = int(input("Escolha uma opção: "))
         match opcao:
             case 1:
-                self.mensagem_envio('OPTION-1-Requisição de arquivo')
-                self.requisitar_arquivo()
+                self.mensagem_envio('OPTION-1-Reconstrução de Arquivo')
+                self.reconstruir_arquivo()
                 self.opcoes_cliente()
             case 2:
-                self.mensagem_envio('OPTION-2-Desconectando do Servidor')
+                self.mensagem_envio('OPTION-2-Receber Resultados')
+                self.requisitar_arquivo()
                 self.fechar_conexao()
             case _:
                 print('A escolha precisa estar nas opções acima!')

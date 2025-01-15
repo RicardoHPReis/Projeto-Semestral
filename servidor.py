@@ -103,9 +103,6 @@ class Servidor:
             
         match opcao:
             case 1:
-                self.enviar_arquivo(cliente_socket, endereco)
-                self.opcoes_servidor(cliente_socket, endereco)
-            case 2:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
                 if resposta[0] == "OK":
                     self.logger.warning(f"Cliente desconectado: {endereco}")
@@ -115,6 +112,9 @@ class Servidor:
                     os.system('cls' if os.name == 'nt' else 'clear')
                     self.titulo()
                     print(f"{len(self.__clientes)} cliente(s) conectado(s)...")
+            case 2:
+                self.enviar_arquivo(cliente_socket, endereco)
+                self.opcoes_servidor(cliente_socket, endereco)
 
 
     def retornar_nome_arquivos(self, cliente_socket:s.socket, endereco:tuple):
