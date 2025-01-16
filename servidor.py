@@ -6,7 +6,7 @@ import threading as th
 import numpy as np
 import csv
 import os
-
+import matplotlib.pyplot as plt
 
 class Servidor:
     def __init__(self):
@@ -17,13 +17,17 @@ class Servidor:
         self.__PORTA_DO_SERVER = 6000
         self.__TAM_BUFFER = 2048
         self.__ENDERECO_IP = (self.__NOME_DO_SERVER, self.__PORTA_DO_SERVER)
+        self.__nome_arquivo = ""
+        self.__modelo = ""
+        self.__modelo_imagem = ""
+        self.__ganho_de_sinal = ""
         
-        self.__clientes = []    
+        self.__clientes = []
 
         self.__server_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.__server_socket.bind(self.__ENDERECO_IP)
         self.__server_socket.listen()
-        #self.__server_socket.settimeout(60)
+        self.__server_socket.settimeout(60)
         self.logger.info(f"Socket do servidor criado na porta: '{self.__PORTA_DO_SERVER}'")
         
     
@@ -34,7 +38,7 @@ class Servidor:
             
         self.__clientes.clear()
         self.__server_socket.close()
-        os.system('cls' if os.name == 'nt' else 'clear')
+        #os.system('cls' if os.name == 'nt' else 'clear')
         
     
     def titulo(self):
@@ -66,7 +70,7 @@ class Servidor:
         inicializar = ''
         iniciar_server = False
         while inicializar == '':
-            os.system('cls' if os.name == 'nt' else 'clear')
+            #os.system('cls' if os.name == 'nt' else 'clear')
             self.titulo()
             inicializar = input("Deseja inicializar o servidor [S/N] ? ").lower().strip()
             match inicializar:
@@ -104,6 +108,24 @@ class Servidor:
         match opcao:
             case 1:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
+                self.__modelo = resposta[2]
+                self.__modelo_imagem = resposta[3]
+                if resposta[0] == "OK":
+                    self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
+                    self.receber_ganho_sinal(cliente_socket, endereco)
+                    self.reconstruir_imagem(cliente_socket, endereco)
+                    self.opcoes_servidor(cliente_socket, endereco)
+            case 2:
+                resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
+                self.__modelo = resposta[2]
+                self.__modelo_imagem = resposta[3]
+                if resposta[0] == "OK":
+                    self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
+                    self.receber_ganho_sinal(cliente_socket, endereco)
+                    self.reconstruir_imagem(cliente_socket, endereco)
+                    self.opcoes_servidor(cliente_socket, endereco)
+            case 3:
+                resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
                 if resposta[0] == "OK":
                     self.logger.warning(f"Cliente desconectado: {endereco}")
                     self.__clientes.remove(cliente_socket)
@@ -112,57 +134,29 @@ class Servidor:
                     os.system('cls' if os.name == 'nt' else 'clear')
                     self.titulo()
                     print(f"{len(self.__clientes)} cliente(s) conectado(s)...")
-            case 2:
-                self.enviar_arquivo(cliente_socket, endereco)
-                self.opcoes_servidor(cliente_socket, endereco)
 
 
-    def retornar_nome_arquivos(self, cliente_socket:s.socket, endereco:tuple):
-        os.system('cls' if os.name == 'nt' else 'clear')
+    def receber_ganho_sinal(self, cliente_socket: s.socket, endereco: tuple):
+        data_size = cliente_socket.recv(8)
+        self.logger.info(f"Remetente: {endereco} - Recebido: 'Tamanho dos dados {data_size}'")
+        size = int.from_bytes(data_size, byteorder='big') 
+        
+        # Receive the data in chunks
+        i=0
+        received_data = bytearray()
+        while len(received_data) < size:
+            chunk = cliente_socket.recv(4096)
+            self.logger.info(f"Remetente: {endereco} - Recebido: 'ACK-{i+1}'")
+            if not chunk:
+                break
+            received_data.extend(chunk)
+            i+=1
+        
+        # Convert the received bytes back to a NumPy array
+        self.logger.info(f"'OK-4-Todos os {i} pacotes foram enviados!'")
+        self.__ganho_de_sinal = np.frombuffer(received_data, dtype=np.float64)
 
-        file_paths = os.listdir("./images")
-        num_arquivos = len(file_paths)
 
-        self.mensagem_envio(cliente_socket, endereco, str(num_arquivos))
-        
-        confirmacao_tam = self.mensagem_recebimento(cliente_socket, endereco).split("-")
-        
-        if(confirmacao_tam[0] == "ERROR"):
-            self.logger.error("ERRO-1-Erro na requisição")
-            os.system('cls' if os.name == 'nt' else 'clear')
-            self.titulo()
-            print("Erro na Requisição")
-            t.sleep(2)
-            os.system('cls' if os.name == 'nt' else 'clear')
-            return
-        
-        elif(num_arquivos <= 0):
-            self.logger.error("ERRO-2-Nenhum arquivo no servidor")
-            os.system('cls' if os.name == 'nt' else 'clear')
-            self.titulo()
-            print("Nenhum arquivo no servidor")
-            t.sleep(2)
-            os.system('cls' if os.name == 'nt' else 'clear')
-            
-        else:
-            i = 0
-            while i < num_arquivos:
-                self.mensagem_envio(cliente_socket, endereco, file_paths[i])
-                ack = self.mensagem_recebimento(cliente_socket, endereco).split("-")
-                if (ack[1] == str(i+1)):
-                    i += 1
-                
-            while True:
-                nome_arquivo = self.mensagem_recebimento(cliente_socket, endereco)
-                    
-                if not os.path.exists(os.path.join("./images", nome_arquivo)):
-                    self.mensagem_envio(cliente_socket, endereco, "ERROR-3-Arquivo não encontrado!")
-                else:
-                    self.mensagem_envio(cliente_socket, endereco, 'OK-1-Confirmação')
-                    break
-            return nome_arquivo
-        
-        
     def checksum_arquivo(self, nome_arquivo: str) -> str:
         checksum = h.md5()
         with open(os.path.join("./images", nome_arquivo), "rb") as file:
@@ -196,19 +190,64 @@ class Servidor:
         p0 = matriz_trans * r0
         for i in range(0,1000):
             matriz
-        
-        
-    def calcular_CGNR():
-        g = []
-        matriz = []
-        matriz_trans = []
-        f0 = 0
-        r0 = g - matriz*f0
-        p0 = matriz_trans * r0
-        for i in range(0,1000):
-            matriz
     
     
+    def calcular_CGNR(self, H:np.ndarray, g:np.ndarray):
+        f = np.zeros(H.shape[1])  # Inicializa f como um vetor de zeros
+        r = g - np.dot(H, f)
+        z = np.dot(H.T, r)
+        p = z
+        iter_count = 0
+
+        porc = len(g)//100
+        antigo = -1
+        for i in range(len(g)):
+            w = np.dot(H, p)
+            alpha = np.dot(z.T, z) / np.dot(w.T, w)
+            f = f + alpha * p
+            r_next = r - alpha * w
+            z_next = np.dot(H.T, r_next)
+
+            error = abs(np.linalg.norm(r, ord = 2) - np.linalg.norm(r_next, ord = 2))
+            if error < 1e-4:
+                print('Terminou o processamento')
+                self.logger.info(f"Terminou o processamento")
+                t.sleep(2)
+                break
+
+            beta = np.dot(z_next.T, z_next) / np.dot(z.T, z)
+            p = z_next + beta * p
+            r = r_next
+            z = z_next
+            
+            iter_count += 1            
+            if antigo < i//porc:
+                antigo+=1
+                os.system('cls' if os.name == 'nt' else 'clear')
+                self.titulo()
+                print(f'Processamento: {antigo}% de {len(g)} pacotes')
+                self.logger.info(f'Processamento: {antigo}% de {len(g)} pacotes')
+
+        return f, iter_count
+    
+    
+    def reconstruir_imagem(self, cliente_socket: s.socket, endereco: tuple):    
+        self.__nome_arquivo = self.__modelo + "-" + self.__modelo_imagem
+        H = np.genfromtxt("data/" + self.__modelo + ".csv", delimiter=',')
+        
+        res_image, iter_count = self.calcular_CGNR(H, self.__ganho_de_sinal)
+        len_image  = int(np.sqrt(len(res_image)))
+        res_image = res_image.reshape((len_image, len_image), order='F')
+        
+        #plt.imshow(res_image, 'gray')
+        plt.title('Log')
+        print(iter_count)
+        plt.savefig(f'download/{self.__nome_arquivo}.png')
+        plt.close()
+        
+        #return res_image, iter_count
+
+   
     def enviar_arquivo(self, cliente_socket:s.socket, endereco:tuple):
         nome_arquivo: str = self.retornar_nome_arquivos(cliente_socket, endereco)
         num_pacotes: int = (os.path.getsize(os.path.join("./images", nome_arquivo)) // self.__TAM_BUFFER) + 1

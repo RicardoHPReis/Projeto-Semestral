@@ -1,0 +1,7 @@
+INFO - 2025-01-15 23:34:57,519: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-01-15 23:35:05,519: Iniciando conexão com Servidor
+INFO - 2025-01-15 23:35:05,519: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-01-15 23:35:07,027: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-1-Reconstrução de Arquivo'
+INFO - 2025-01-15 23:35:07,027: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-76615ED4423627BF-H_2-Imagem_3_30x30'
+INFO - 2025-01-15 23:35:07,027: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-01-15 23:36:58,412: Deletando Socket:  ('127.0.0.1', 6000)
