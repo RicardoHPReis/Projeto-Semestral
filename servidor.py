@@ -41,13 +41,13 @@ class Servidor:
         #os.system('cls' if os.name == 'nt' else 'clear')
         
     
-    def titulo(self):
+    def titulo(self) -> None:
         print("--------------------")
         print("      SERVIDOR")
         print("--------------------\n")
 
 
-    def mensagem_envio(self, cliente_socket : s.socket, endereco : tuple, mensagem : str):
+    def mensagem_envio(self, cliente_socket:s.socket, endereco:tuple, mensagem:str) -> None:
         try:
             cliente_socket.send(mensagem.encode())
             self.logger.info(f"Destinatário: {endereco} - Enviado:  '{mensagem}'")
@@ -56,7 +56,7 @@ class Servidor:
             self.__clientes.remove(cliente_socket)
 
 
-    def mensagem_recebimento(self, cliente_socket : s.socket, endereco : tuple):
+    def mensagem_recebimento(self, cliente_socket:s.socket, endereco:tuple) -> str:
         try:
             mensagem = cliente_socket.recv(self.__TAM_BUFFER).decode('utf-8')
             self.logger.info(f"Remetente: {endereco} - Recebido: '{mensagem}'")
@@ -66,11 +66,11 @@ class Servidor:
             self.__clientes.remove(cliente_socket)
         
 
-    def iniciar_servidor(self):
+    def iniciar_servidor(self) -> None:
         inicializar = ''
         iniciar_server = False
         while inicializar == '':
-            #os.system('cls' if os.name == 'nt' else 'clear')
+            os.system('cls' if os.name == 'nt' else 'clear')
             self.titulo()
             inicializar = input("Deseja inicializar o servidor [S/N] ? ").lower().strip()
             match inicializar:
@@ -94,7 +94,7 @@ class Servidor:
         return iniciar_server
 
 
-    def opcoes_servidor(self, cliente_socket:s.socket, endereco:tuple):
+    def opcoes_servidor(self, cliente_socket:s.socket, endereco:tuple) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
         print(f"{len(self.__clientes)} cliente(s) conectado(s)...")
@@ -125,6 +125,9 @@ class Servidor:
                     self.reconstruir_imagem(cliente_socket, endereco)
                     self.opcoes_servidor(cliente_socket, endereco)
             case 3:
+                print("Oi")
+                #Continuar receber relatorio
+            case 4:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
                 if resposta[0] == "OK":
                     self.logger.warning(f"Cliente desconectado: {endereco}")
@@ -136,53 +139,7 @@ class Servidor:
                     print(f"{len(self.__clientes)} cliente(s) conectado(s)...")
 
 
-    def receber_ganho_sinal(self, cliente_socket: s.socket, endereco: tuple):
-        data_size = cliente_socket.recv(8)
-        self.logger.info(f"Remetente: {endereco} - Recebido: 'Tamanho dos dados {data_size}'")
-        size = int.from_bytes(data_size, byteorder='big') 
-        
-        # Receive the data in chunks
-        i=0
-        received_data = bytearray()
-        while len(received_data) < size:
-            chunk = cliente_socket.recv(4096)
-            self.logger.info(f"Remetente: {endereco} - Recebido: 'ACK-{i+1}'")
-            if not chunk:
-                break
-            received_data.extend(chunk)
-            i+=1
-        
-        # Convert the received bytes back to a NumPy array
-        self.logger.info(f"'OK-4-Todos os {i} pacotes foram enviados!'")
-        self.__ganho_de_sinal = np.frombuffer(received_data, dtype=np.float64)
-
-
-    def checksum_arquivo(self, nome_arquivo: str) -> str:
-        checksum = h.md5()
-        with open(os.path.join("./images", nome_arquivo), "rb") as file:
-            while data := file.read(self.__TAM_BUFFER):
-                checksum.update(data)
-
-        return checksum.hexdigest()
-    
-    
-    def dot_matriz(matriz_1:np.ndarray, matriz_2:np.ndarray) -> np.ndarray:
-        tam_1 = matriz_1.shape
-        tam_2 = matriz_2.shape
-        
-        if matriz_1.ndim < 2:
-            tam_1 = (0, tam_1[0])
-        if matriz_2.ndim < 2:
-            tam_2 = (0, tam_2[0])
-        
-        if tam_1[1] != tam_2[0]:
-            raise ValueError
-        else:
-            return matriz_1 @ matriz_2
-    
-    
-    def calcular_CGNE():
-        g = []
+    def calcular_CGNE(self, H:np.ndarray, g:np.ndarray) -> tuple[np.ndarray, int]:
         matriz = np.array([])
         matriz_trans = []
         f0 = 0
@@ -192,7 +149,7 @@ class Servidor:
             matriz
     
     
-    def calcular_CGNR(self, H:np.ndarray, g:np.ndarray):
+    def calcular_CGNR(self, H:np.ndarray, g:np.ndarray) -> tuple[np.ndarray, int]:
         f = np.zeros(H.shape[1])  # Inicializa f como um vetor de zeros
         r = g - np.dot(H, f)
         z = np.dot(H.T, r)
@@ -231,15 +188,36 @@ class Servidor:
         return f, iter_count
     
     
-    def reconstruir_imagem(self, cliente_socket: s.socket, endereco: tuple):    
+    def receber_ganho_sinal(self, cliente_socket:s.socket, endereco:tuple) -> None:
+        data_size = cliente_socket.recv(8)
+        size = int.from_bytes(data_size, byteorder='big') 
+        self.logger.info(f"Remetente: {endereco} - Recebido: 'Tamanho dos dados {size}'")
+        
+        # Receive the data in chunks
+        i=0
+        received_data = bytearray()
+        while len(received_data) < size:
+            chunk = cliente_socket.recv(4096)
+            self.logger.info(f"Remetente: {endereco} - Recebido: 'ACK-{i+1}'")
+            if not chunk:
+                break
+            received_data.extend(chunk)
+            i+=1
+        
+        # Convert the received bytes back to a NumPy array
+        self.logger.info(f"'OK-4-Todos os {i} pacotes foram enviados!'")
+        self.__ganho_de_sinal = np.frombuffer(received_data, dtype=np.float64)
+
+    
+    def reconstruir_imagem(self, cliente_socket:s.socket, endereco:tuple) -> None:    
         self.__nome_arquivo = self.__modelo + "-" + self.__modelo_imagem
         H = np.genfromtxt("data/" + self.__modelo + ".csv", delimiter=',')
         
-        res_image, iter_count = self.calcular_CGNR(H, self.__ganho_de_sinal)
-        len_image  = int(np.sqrt(len(res_image)))
-        res_image = res_image.reshape((len_image, len_image), order='F')
+        resultado, iter_count = self.calcular_CGNR(H, self.__ganho_de_sinal)
+        len_image  = int(np.sqrt(len(resultado)))
+        resultado = resultado.reshape((len_image, len_image), order='F')
         
-        #plt.imshow(res_image, 'gray')
+        plt.imshow(resultado, 'gray')
         plt.title('Log')
         print(iter_count)
         plt.savefig(f'download/{self.__nome_arquivo}.png')
@@ -247,52 +225,8 @@ class Servidor:
         
         #return res_image, iter_count
 
-   
-    def enviar_arquivo(self, cliente_socket:s.socket, endereco:tuple):
-        nome_arquivo: str = self.retornar_nome_arquivos(cliente_socket, endereco)
-        num_pacotes: int = (os.path.getsize(os.path.join("./images", nome_arquivo)) // self.__TAM_BUFFER) + 1
-        num_digitos: int = len(str(num_pacotes))
-        num_buffer: int = num_digitos + 1 + 16 + 1 + self.__TAM_BUFFER
-        checksum: str = self.checksum_arquivo(nome_arquivo)
-        
-        #matriz = np.matrix()
-        with open(os.path.join("./images", nome_arquivo), 'r') as file:
-            csvFile = csv.reader(file)
-            for lines in csvFile:
-                print(lines)
 
-        self.mensagem_envio(cliente_socket, endereco, f"OK-2-{num_pacotes}-{num_digitos}-{num_buffer}-{checksum}")
-        inicio = self.mensagem_recebimento(cliente_socket, endereco).split("-")
-        if inicio[0] != "OK":
-            return
-
-        with open(os.path.join("./images", nome_arquivo), "rb") as arquivo:
-            i = 0
-            while data := arquivo.read(self.__TAM_BUFFER):
-                hash_ = h.md5(data).digest()
-                data_criptografada = b" ".join([f"{i:{'0'}{num_digitos}}".encode(), hash_, data])
-                
-                try:
-                    cliente_socket.send(data_criptografada)
-                    self.logger.info(f"Destinatário: {endereco} - Enviado:  'Pacote {i+1}'")
-                except:
-                    self.logger.error(f"Cliente removido:  {endereco}")
-                    self.__clientes.remove(cliente_socket)
-                    break
-                
-                while self.mensagem_recebimento(cliente_socket, endereco) == "NOK":
-                    try:
-                        cliente_socket.send(data_criptografada)
-                        self.logger.warning(f"Destinatário: {endereco} - Enviado novamente:  'Pacote {i+1}'")
-                    except:
-                        self.logger.error(f"Cliente removido:  {endereco}")
-                        self.__clientes.remove(cliente_socket)
-                        break
-                i += 1
-        self.logger.info(f"'OK-4-Todos os {num_pacotes} foram enviados!'")
-
-
-    def run(self):
+    def run(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
         iniciar_server = self.iniciar_servidor()
         os.system('cls' if os.name == 'nt' else 'clear')
