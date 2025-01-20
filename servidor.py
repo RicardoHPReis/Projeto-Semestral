@@ -7,6 +7,7 @@ import numpy as np
 import csv
 import os
 import matplotlib.pyplot as plt
+import psutil
 
 class Servidor:
     def __init__(self):
@@ -17,10 +18,10 @@ class Servidor:
         self.__PORTA_DO_SERVER = 6000
         self.__TAM_BUFFER = 2048
         self.__ENDERECO_IP = (self.__NOME_DO_SERVER, self.__PORTA_DO_SERVER)
-        self.__nome_arquivo = ""
-        self.__modelo = ""
-        self.__modelo_imagem = ""
-        self.__ganho_de_sinal = ""
+        #self.__nome_arquivo = ""
+        #self.__modelo = ""
+        #self.__modelo_imagem = ""
+        #self.__ganho_de_sinal = ""
         
         self.__clientes = []
 
@@ -108,21 +109,23 @@ class Servidor:
         match opcao:
             case 1:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
-                self.__modelo = resposta[2]
-                self.__modelo_imagem = resposta[3]
+                modelo = resposta[2]
+                modelo_imagem = resposta[3]
+                nome_usuario = resposta[1]
                 if resposta[0] == "OK":
                     self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
-                    self.receber_ganho_sinal(cliente_socket, endereco)
-                    self.reconstruir_imagem(cliente_socket, endereco)
+                    ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
+                    self.reconstruir_imagem(cliente_socket, endereco,modelo, modelo_imagem, ganho_de_sinal, nome_usuario)
                     self.opcoes_servidor(cliente_socket, endereco)
             case 2:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
-                self.__modelo = resposta[2]
-                self.__modelo_imagem = resposta[3]
+                __modelo = resposta[2]
+                __modelo_imagem = resposta[3]
+                __nome_usuario = resposta[1]
                 if resposta[0] == "OK":
                     self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
                     self.receber_ganho_sinal(cliente_socket, endereco)
-                    self.reconstruir_imagem(cliente_socket, endereco)
+                    self.reconstruir_imagem(cliente_socket, endereco,__modelo, __modelo_imagem, __nome_usuario)
                     self.opcoes_servidor(cliente_socket, endereco)
             case 3:
                 print("Oi")
@@ -206,17 +209,41 @@ class Servidor:
         
         # Convert the received bytes back to a NumPy array
         self.logger.info(f"'OK-4-Todos os {i} pacotes foram enviados!'")
-        self.__ganho_de_sinal = np.frombuffer(received_data, dtype=np.float64)
+        return np.frombuffer(received_data, dtype=np.float64)
 
     
-    def reconstruir_imagem(self, cliente_socket:s.socket, endereco:tuple) -> None:    
-        self.__nome_arquivo = self.__modelo + "-" + self.__modelo_imagem
-        H = np.genfromtxt("data/" + self.__modelo + ".csv", delimiter=',')
+    def reconstruir_imagem(self, cliente_socket:s.socket, endereco:tuple, modelo, modelo_imagem, ganho_de_sinal, nome_usuario) -> None:    
+        process = psutil.Process(os.getpid())
+        start_time = t.time()
+        start_cpu = process.cpu_percent(interval=None)
+        start_mem = process.memory_info().rss
         
-        resultado, iter_count = self.calcular_CGNR(H, self.__ganho_de_sinal)
+        self.__nome_arquivo = modelo + "-" + modelo_imagem 
+        H = np.genfromtxt("data/" + modelo + ".csv", delimiter=',')
+        
+        resultado, iter_count = self.calcular_CGNR(H, ganho_de_sinal)
         len_image  = int(np.sqrt(len(resultado)))
         resultado = resultado.reshape((len_image, len_image), order='F')
         
+        end_time = t.time()
+        end_cpu = process.cpu_percent(interval=None)
+        end_mem = process.memory_info().rss
+    
+        total_time = end_time - start_time
+        cpu_usage = end_cpu - start_cpu
+        memory_usage = (end_mem - start_mem) / (1024 ** 2)  
+
+        os.makedirs("relatorios", exist_ok=True)
+        relatorio_path = f"relatorios/desempenho_{self.__nome_arquivo}.csv"
+        with open(relatorio_path, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Usuário", "Iterações", "Tempo Total (s)", "Uso de CPU (%)", "Uso de Memória (MB)"])
+            writer.writerow([nome_usuario, self.iter_count, total_time, cpu_usage, memory_usage])
+
+        self.logger.info(f"Relatório de desempenho salvo em {relatorio_path}")
+        
+        #relatorio 
+
         plt.imshow(resultado, 'gray')
         plt.title('Log')
         print(iter_count)
