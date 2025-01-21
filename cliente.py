@@ -1,16 +1,16 @@
-import socket as s
-import time as t
+import Cryptodome.Random.random as ri
+import Cryptodome.Random as r
+import threading as th
 import logging as l
 import hashlib as h
-import threading as th
 import numpy as np
-import Cryptodome.Random as r
-import Cryptodome.Random.random as ri
+import socket as s
+import time as t
 import os
 
-modelos_possiveis = ["H_2"]
-sinais_modelo_1_possiveis = ["Imagem_1_60x60", "Imagem_2_60x60", "Imagem_3_60x60"]
-sinais_modelo_2_possiveis = ["Imagem_1_30x30", "Imagem_2_30x30", "Imagem_3_30x30"]
+MODELOS_POSSIVEIS = ["H_2"]
+SINAIS_MODELO_1_POSSIVEIS = ["Imagem_1_60x60", "Imagem_2_60x60", "Imagem_3_60x60"]
+SINAIS_MODELO_2_POSSIVEIS = ["Imagem_1_30x30", "Imagem_2_30x30", "Imagem_3_30x30"]
 class Cliente:
     def __init__(self):
         self.logger = l.getLogger(__name__)
@@ -41,7 +41,7 @@ class Cliente:
         print("--------------------------\n")
         
 
-    def mensagem_envio(self, mensagem : str) -> None:
+    def mensagem_envio(self, mensagem:str) -> None:
         try:
             self.__conexao_socket.send(mensagem.encode())
             self.logger.info(f"Destinatário: {self.__ENDERECO_IP} - Enviado: '{mensagem}'")
@@ -102,28 +102,9 @@ class Cliente:
             t.sleep(2)
             os.system('cls' if os.name == 'nt' else 'clear')
             return
-                
-
-    def escolher_arquivo(self) -> None:
-        conjunto_arquivos = os.listdir("./images")            
-        while not os.path.exists(os.path.join("./images", self.__nome_arquivo)):
-            os.system('cls' if os.name == 'nt' else 'clear')
-            self.titulo()
-            print('Arquivos disponíveis no servidor:')
-            for arquivo in conjunto_arquivos:
-                print(arquivo)
-
-            self.__nome_arquivo = input("\nDigite o nome do arquivo que você deseja receber: ")
-        
-        modelos = self.__nome_arquivo.split("-")
-        self.__modelo_tamanho = modelos[0]
-        self.__modelo_imagem = modelos[1].split("0")
-        
-        self.__nome_arquivo = self.__modelo_tamanho + '-' + self.__modelo_imagem + ".csv"
-        self.mensagem_envio(f'OK-{self.__NOME_DO_USUARIO}-{self.__modelo_tamanho}-{self.__modelo_imagem}')
 
 
-    def descriptografar_arquivo(self, pacote : bytes, hash_inicio : int, hash_final : int) -> tuple[bytes, bytes, bytes]:
+    def descriptografar_arquivo(self, pacote:bytes, hash_inicio:int, hash_final:int) -> tuple[bytes, bytes, bytes]:
         nr_pacote = pacote[0:3]
         parte_checksum = pacote[hash_inicio:hash_final]
         data = pacote[hash_final+1 :]
@@ -135,6 +116,7 @@ class Cliente:
         g = np.genfromtxt("images/" + self.__nome_arquivo, delimiter='\n')
         N = 64
         S = 794 if self.__modelo_tamanho == "H_1" else 436
+        self.logger.info(f"Aplicando ganho de sinal: {self.__nome_arquivo}") 
 
         if len(g) != N * S:
             self.logger.error(f"Tamanho de g ({len(g)}) não corresponde ao esperado ({N} x {S} = {N * S})")
@@ -148,19 +130,46 @@ class Cliente:
 
 
     def aleatorizar_imagens(self) -> None:
-        self.__modelo_tamanho = ri.choice(modelos_possiveis)
+        self.__modelo_tamanho = ri.choice(MODELOS_POSSIVEIS)
         if self.__modelo_tamanho == "H_1":
-            self.__modelo_imagem = ri.choice(sinais_modelo_1_possiveis)
+            self.__modelo_imagem = ri.choice(SINAIS_MODELO_1_POSSIVEIS)
         else:
-            self.__modelo_imagem = ri.choice(sinais_modelo_2_possiveis)
+            self.__modelo_imagem = ri.choice(SINAIS_MODELO_2_POSSIVEIS)
         self.__nome_arquivo = self.__modelo_tamanho + '-' + self.__modelo_imagem + ".csv"
         self.mensagem_envio(f'OK-{self.__NOME_DO_USUARIO}-{self.__modelo_tamanho}-{self.__modelo_imagem}')
     
 
-    def enviar_modelo(self) -> None:       
+    def escolher_arquivo(self) -> None:
+        arquivo_encontrado = False
+        conjunto_arquivos = os.listdir("./images")            
+        while not arquivo_encontrado:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            self.titulo()
+            print('Arquivos disponíveis no servidor:')
+            for arquivo in conjunto_arquivos:
+                print(arquivo)
+
+            self.__nome_arquivo = input("\nDigite o nome do arquivo que você deseja receber: ")
+            
+            if os.path.exists(os.path.join("./images", self.__nome_arquivo)):
+                arquivo_encontrado = True
+            else:
+                print('A escolha precisa estar nas opções acima!')
+                t.sleep(2)
+        
+        modelos = self.__nome_arquivo.split("-")
+        self.__modelo_tamanho = modelos[0]
+        self.__modelo_imagem = modelos[1].split(".")[0]
+        
+        self.__nome_arquivo = self.__modelo_tamanho + '-' + self.__modelo_imagem + ".csv"
+        self.mensagem_envio(f'OK-{self.__NOME_DO_USUARIO}-{self.__modelo_tamanho}-{self.__modelo_imagem}')
+
+
+    def enviar_modelo(self) -> None:
         resposta = self.mensagem_recebimento().split("-")
         if resposta[0] == "OK":
             self.__ganho_de_sinal = self.aplicar_ganho_sinal()
+            self.logger.info("Enviando ganho de sinal") 
             ganho_sinal_byte = self.__ganho_de_sinal.tobytes()
         
             # Send the size of the serialized data first
@@ -169,12 +178,58 @@ class Cliente:
             
             # Send the serialized data in chunks
             self.__conexao_socket.sendall(ganho_sinal_byte)
+            self.logger.info("Terminou o envio") 
+            print("Esperando retorno..")
+            retorno = self.mensagem_recebimento().split("-")
+            if retorno[0] != "OK":
+                self.logger.error("Retorno não concluído")
     
 
-    def requisitar_relatorio(self) -> None:
-        file_paths = os.listdir("./images")
+    def escolher_relatorio(self):
+        conjunto_arquivos = []
+        num_arquivos = int(self.mensagem_recebimento())
         
-        nome_arquivo = self.escolher_arquivo()
+        if not isinstance(num_arquivos, int):
+            self.mensagem_envio('ERROR-1-Má requisição')
+        elif num_arquivos < 0:
+            self.mensagem_envio('ERROR-2-Tamanho incongruente')
+        else:
+            self.mensagem_envio('OK-1-Confirmação')
+
+        i = 0
+        while i < num_arquivos:
+            recv_arquivo = self.mensagem_recebimento()
+            self.mensagem_envio(f"ACK-{i+1}")
+            conjunto_arquivos.append(recv_arquivo)
+            i+=1
+            
+            
+        while True:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            self.titulo()
+            print('Arquivos disponíveis no servidor:')
+            for arquivo in conjunto_arquivos:
+                print(arquivo)
+
+            nome_arquivo = input("\nDigite o nome do arquivo que você deseja receber: ")
+            
+            self.mensagem_envio(nome_arquivo)
+            
+            ok_arq = self.mensagem_recebimento().split("-")
+        
+            if(ok_arq[0] == 'OK'):
+                break
+            else:
+                print('A escolha precisa estar nas opções acima!')
+                t.sleep(2)
+                
+        return nome_arquivo
+
+
+    def requisitar_relatorio(self) -> None:
+        self.mensagem_envio(f'OK-{self.__NOME_DO_USUARIO}')
+        nome_arquivo = self.escolher_relatorio()
+        
         archive = nome_arquivo.split(".")
         nome_arquivo = archive[0] + "_cliente." + archive[1]
         dados = self.mensagem_recebimento().split("-")
@@ -226,15 +281,15 @@ class Cliente:
                 print("Transferência de arquivo não teve sucesso!")
                 self.logger.error(f"'ERROR-4-Transferência de arquivo não teve sucesso!'")
             t.sleep(2)
-            
+
 
     def opcoes_cliente(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
-        print('1) Solicitar arquivo aleatório.')
-        print('2) Solicitar arquivo específico.')
-        print('3) Receber Resultados.')
-        print('4) Fechar conexão com o Servidor.\n')
+        print("1) Solicitar arquivo aleatório.")
+        print("2) Solicitar arquivo específico.")
+        print("3) Receber resultados.")
+        print("4) Fechar conexão com o Servidor.\n")
         
         opcao = int(input("Escolha uma opção: "))
         match opcao:
@@ -251,6 +306,7 @@ class Cliente:
             case 3:
                 self.mensagem_envio('OPTION-3-Receber Resultados')
                 self.requisitar_relatorio()
+                #self.ler_relatorio()
                 self.opcoes_cliente()
             case 4:
                 self.mensagem_envio('OPTION-4-Fechar conexão')
@@ -276,7 +332,7 @@ class Cliente:
             self.titulo()
             print("ERROR-5-Excedeu-se o tempo para comunicação entre o servidor e o cliente!")
         except Exception as e:
-            os.system('cls' if os.name == 'nt' else 'clear')
+            #os.system('cls' if os.name == 'nt' else 'clear')
             self.titulo()
             print("ERROR-0-Erro não registrado!")
             print(e)

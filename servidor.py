@@ -1,13 +1,13 @@
-import socket as s
-import time as t
+import matplotlib.pyplot as plt
+import threading as th
 import logging as l
 import hashlib as h
-import threading as th
 import numpy as np
+import socket as s
+import time as t
+import psutil as ps
 import csv
 import os
-import matplotlib.pyplot as plt
-import psutil
 
 class Servidor:
     def __init__(self):
@@ -18,10 +18,6 @@ class Servidor:
         self.__PORTA_DO_SERVER = 6000
         self.__TAM_BUFFER = 2048
         self.__ENDERECO_IP = (self.__NOME_DO_SERVER, self.__PORTA_DO_SERVER)
-        #self.__nome_arquivo = ""
-        #self.__modelo = ""
-        #self.__modelo_imagem = ""
-        #self.__ganho_de_sinal = ""
         
         self.__clientes = []
 
@@ -39,7 +35,7 @@ class Servidor:
             
         self.__clientes.clear()
         self.__server_socket.close()
-        #os.system('cls' if os.name == 'nt' else 'clear')
+        os.system('cls' if os.name == 'nt' else 'clear')
         
     
     def titulo(self) -> None:
@@ -115,21 +111,23 @@ class Servidor:
                 if resposta[0] == "OK":
                     self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
                     ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
-                    self.reconstruir_imagem(cliente_socket, endereco,modelo, modelo_imagem, ganho_de_sinal, nome_usuario)
+                    self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario)
                     self.opcoes_servidor(cliente_socket, endereco)
             case 2:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
-                __modelo = resposta[2]
-                __modelo_imagem = resposta[3]
-                __nome_usuario = resposta[1]
+                modelo = resposta[2]
+                modelo_imagem = resposta[3]
+                nome_usuario = resposta[1]
                 if resposta[0] == "OK":
                     self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
-                    self.receber_ganho_sinal(cliente_socket, endereco)
-                    self.reconstruir_imagem(cliente_socket, endereco,__modelo, __modelo_imagem, __nome_usuario)
+                    ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
+                    self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario)
                     self.opcoes_servidor(cliente_socket, endereco)
             case 3:
-                print("Oi")
-                #Continuar receber relatorio
+                resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
+                nome_usuario = resposta[1]
+                self.enviar_relatorio(cliente_socket, endereco, nome_usuario)
+                self.opcoes_servidor(cliente_socket, endereco)
             case 4:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
                 if resposta[0] == "OK":
@@ -142,14 +140,145 @@ class Servidor:
                     print(f"{len(self.__clientes)} cliente(s) conectado(s)...")
 
 
+    def checksum_arquivo(self, nome_arquivo: str) -> str:
+        checksum = h.md5()
+        with open(os.path.join("./content", nome_arquivo), "rb") as file:
+            while data := file.read(self.__TAM_BUFFER):
+                checksum.update(data)
+
+        return checksum.hexdigest()
+        
+
+    def enviar_relatorio(self, cliente_socket:s.socket, endereco:tuple, nome_usuario:str) -> None:
+        nome_arquivo: str = self.retornar_nome_arquivos(cliente_socket, endereco, nome_usuario)
+        if nome_arquivo == "":
+            return
+        
+        num_pacotes: int = (os.path.getsize(os.path.join("./content", nome_arquivo)) // self.__TAM_BUFFER) + 1
+        num_digitos: int = len(str(num_pacotes))
+        num_buffer: int = num_digitos + 1 + 16 + 1 + self.__TAM_BUFFER
+        checksum: str = self.checksum_arquivo(nome_arquivo)
+
+        self.mensagem_envio(cliente_socket, endereco, f"OK-2-{num_pacotes}-{num_digitos}-{num_buffer}-{checksum}")
+        inicio = self.mensagem_recebimento(cliente_socket, endereco).split("-")
+        if inicio[0] != "OK":
+            return
+
+        with open(os.path.join("./content", nome_arquivo), "rb") as arquivo:
+            i = 0
+            while data := arquivo.read(self.__TAM_BUFFER):
+                hash_ = h.md5(data).digest()
+                data_criptografada = b" ".join([f"{i:{'0'}{num_digitos}}".encode(), hash_, data])
+                
+                try:
+                    cliente_socket.send(data_criptografada)
+                    self.logger.info(f"Destinatário: {endereco} - Enviado:  'Pacote {i+1}'")
+                except:
+                    self.logger.error(f"Cliente removido:  {endereco}")
+                    self.__clientes.remove(cliente_socket)
+                    break
+                
+                while self.mensagem_recebimento(cliente_socket, endereco) == "NOK":
+                    try:
+                        cliente_socket.send(data_criptografada)
+                        self.logger.warning(f"Destinatário: {endereco} - Enviado novamente:  'Pacote {i+1}'")
+                    except:
+                        self.logger.error(f"Cliente removido:  {endereco}")
+                        self.__clientes.remove(cliente_socket)
+                        break
+                i += 1
+        self.logger.info(f"'OK-4-Todos os {num_pacotes} foram enviados!'")
+
+
+    def retornar_nome_arquivos(self, cliente_socket:s.socket, endereco:tuple, nome_usuario:str) -> str:
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+        file_paths = os.listdir("./content")
+        arquivos_usuario = []
+        for arq in file_paths:
+            if nome_usuario in arq:
+                arquivos_usuario.append(arq)
+                
+        num_arquivos = len(arquivos_usuario)
+
+        self.mensagem_envio(cliente_socket, endereco, str(num_arquivos))
+        
+        confirmacao_tam = self.mensagem_recebimento(cliente_socket, endereco).split("-")
+        
+        if(confirmacao_tam[0] == "ERROR"):
+            self.logger.error("ERRO-1-Erro na requisição")
+            os.system('cls' if os.name == 'nt' else 'clear')
+            self.titulo()
+            print("Erro na Requisição")
+            t.sleep(2)
+            os.system('cls' if os.name == 'nt' else 'clear')
+            return ""
+        
+        elif(num_arquivos <= 0):
+            self.logger.error("ERRO-2-Nenhum arquivo no servidor")
+            os.system('cls' if os.name == 'nt' else 'clear')
+            self.titulo()
+            print("Nenhum arquivo no servidor")
+            t.sleep(2)
+            os.system('cls' if os.name == 'nt' else 'clear')
+            return ""
+            
+        else:
+            i = 0
+            while i < num_arquivos:
+                self.mensagem_envio(cliente_socket, endereco, arquivos_usuario[i])
+                ack = self.mensagem_recebimento(cliente_socket, endereco).split("-")
+                if (ack[1] == str(i+1)):
+                    i += 1
+                
+            while True:
+                nome_arquivo = self.mensagem_recebimento(cliente_socket, endereco)
+                    
+                if nome_arquivo not in arquivos_usuario:
+                    self.mensagem_envio(cliente_socket, endereco, "ERROR-3-Arquivo não encontrado!")
+                else:
+                    self.mensagem_envio(cliente_socket, endereco, 'OK-1-Confirmação')
+                    break
+            return nome_arquivo
+
+
     def calcular_CGNE(self, H:np.ndarray, g:np.ndarray) -> tuple[np.ndarray, int]:
-        matriz = np.array([])
-        matriz_trans = []
-        f0 = 0
-        r0 = g - matriz*f0
-        p0 = matriz_trans * r0
-        for i in range(0,1000):
-            matriz
+        f = np.zeros(H.shape[1])  # Inicializa f como um vetor de zeros
+        r = g - np.dot(H, f)
+        z = np.dot(H.T, r)
+        p = z
+        iter_count = 0
+
+        porc = len(g)//100
+        antigo = -1
+        for i in range(len(g)):
+            w = np.dot(H, p)
+            alpha = np.dot(z.T, z) / np.dot(w.T, w)
+            f = f + alpha * p
+            r_next = r - alpha * w
+            z_next = np.dot(H.T, r_next)
+
+            error = abs(np.linalg.norm(r, ord = 2) - np.linalg.norm(r_next, ord = 2))
+            if error < 1e-4:
+                self.logger.info("Erro menor que 1e-4")
+                break
+
+            beta = np.dot(z_next.T, z_next) / np.dot(z.T, z)
+            p = z_next + beta * p
+            r = r_next
+            z = z_next
+            
+            iter_count += 1            
+            if antigo < i//porc:
+                antigo+=1
+                os.system('cls' if os.name == 'nt' else 'clear')
+                self.titulo()
+                print(f'Processamento: {antigo}% de {len(g)} pacotes')
+                self.logger.info(f'Processamento: {antigo}% de {len(g)} pacotes')
+
+        print('Terminou o processamento')
+        self.logger.info(f"Terminou o processamento")
+        return f, iter_count
     
     
     def calcular_CGNR(self, H:np.ndarray, g:np.ndarray) -> tuple[np.ndarray, int]:
@@ -170,9 +299,7 @@ class Servidor:
 
             error = abs(np.linalg.norm(r, ord = 2) - np.linalg.norm(r_next, ord = 2))
             if error < 1e-4:
-                print('Terminou o processamento')
-                self.logger.info(f"Terminou o processamento")
-                t.sleep(2)
+                self.logger.info("Erro menor que 1e-4")
                 break
 
             beta = np.dot(z_next.T, z_next) / np.dot(z.T, z)
@@ -188,6 +315,8 @@ class Servidor:
                 print(f'Processamento: {antigo}% de {len(g)} pacotes')
                 self.logger.info(f'Processamento: {antigo}% de {len(g)} pacotes')
 
+        print('Terminou o processamento')
+        self.logger.info(f"Terminou o processamento")
         return f, iter_count
     
     
@@ -196,7 +325,6 @@ class Servidor:
         size = int.from_bytes(data_size, byteorder='big') 
         self.logger.info(f"Remetente: {endereco} - Recebido: 'Tamanho dos dados {size}'")
         
-        # Receive the data in chunks
         i=0
         received_data = bytearray()
         while len(received_data) < size:
@@ -207,18 +335,17 @@ class Servidor:
             received_data.extend(chunk)
             i+=1
         
-        # Convert the received bytes back to a NumPy array
         self.logger.info(f"'OK-4-Todos os {i} pacotes foram enviados!'")
         return np.frombuffer(received_data, dtype=np.float64)
 
     
-    def reconstruir_imagem(self, cliente_socket:s.socket, endereco:tuple, modelo, modelo_imagem, ganho_de_sinal, nome_usuario) -> None:    
-        process = psutil.Process(os.getpid())
+    def reconstruir_imagem(self, cliente_socket:s.socket, endereco:tuple, modelo:str, modelo_imagem:str, ganho_de_sinal:np.ndarray, nome_usuario:str) -> None:
+        process = ps.Process(os.getpid())
         start_time = t.time()
         start_cpu = process.cpu_percent(interval=None)
         start_mem = process.memory_info().rss
         
-        self.__nome_arquivo = modelo + "-" + modelo_imagem 
+        nome_arquivo = modelo + "-" + modelo_imagem 
         H = np.genfromtxt("data/" + modelo + ".csv", delimiter=',')
         
         resultado, iter_count = self.calcular_CGNR(H, ganho_de_sinal)
@@ -233,21 +360,21 @@ class Servidor:
         cpu_usage = end_cpu - start_cpu
         memory_usage = (end_mem - start_mem) / (1024 ** 2)  
 
-        os.makedirs("relatorios", exist_ok=True)
-        relatorio_path = f"relatorios/desempenho_{self.__nome_arquivo}.csv"
+        os.makedirs("./content", exist_ok=True)
+        relatorio_path = f"./content/{nome_usuario}-{nome_arquivo}.csv"
         with open(relatorio_path, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(["Usuário", "Iterações", "Tempo Total (s)", "Uso de CPU (%)", "Uso de Memória (MB)"])
-            writer.writerow([nome_usuario, self.iter_count, total_time, cpu_usage, memory_usage])
+            writer.writerow([nome_usuario, iter_count, total_time, cpu_usage, memory_usage])
 
         self.logger.info(f"Relatório de desempenho salvo em {relatorio_path}")
-        
+        self.mensagem_envio(cliente_socket, endereco, 'OK-Processo terminado')
         #relatorio 
 
         plt.imshow(resultado, 'gray')
         plt.title('Log')
         print(iter_count)
-        plt.savefig(f'download/{self.__nome_arquivo}.png')
+        plt.savefig(f'download/{nome_arquivo}.png')
         plt.close()
         
         #return res_image, iter_count

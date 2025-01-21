@@ -1,15 +1,33 @@
-INFO - 2025-01-16 20:21:21,762: Iniciando conexão com Servidor
-INFO - 2025-01-16 20:21:21,762: Cliente conectado ao servidor: ('127.0.0.1', 6000)
-INFO - 2025-01-16 20:21:22,822: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-1-Solicitar arquivo aleatório'
-INFO - 2025-01-16 20:21:22,822: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-4A5B871D71319AFF-H_2-Imagem_3_30x30'
-ERROR - 2025-01-16 20:21:43,206: Removido do Servidor: ('127.0.0.1', 6000)
-INFO - 2025-01-16 20:21:43,245: Deletando Socket:  ('127.0.0.1', 6000)
-INFO - 2025-01-16 20:21:53,510: Iniciando conexão com Servidor
-INFO - 2025-01-16 20:21:53,525: Cliente conectado ao servidor: ('127.0.0.1', 6000)
-INFO - 2025-01-16 20:21:54,537: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-1-Solicitar arquivo aleatório'
-INFO - 2025-01-16 20:21:54,537: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-946DB1839E0D2189-H_2-Imagem_3_30x30'
-INFO - 2025-01-16 20:21:54,537: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
-INFO - 2025-01-16 20:22:14,542: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-4-Fechar conexão'
-INFO - 2025-01-16 20:22:14,542: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-8-Desconectar servidor'
-INFO - 2025-01-16 20:22:14,542: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-8-Desconectado'
-INFO - 2025-01-16 20:22:16,572: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-01-20 23:10:21,945: Iniciando conexão com Servidor
+INFO - 2025-01-20 23:10:21,946: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-01-20 23:10:24,279: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-2-Solicitar arquivo específico'
+INFO - 2025-01-20 23:10:30,224: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-5A45BA9A9C58FD24-H_2-Imagem_2_30x30'
+INFO - 2025-01-20 23:10:30,224: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-01-20 23:16:10,728: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-01-20 23:16:25,163: Iniciando conexão com Servidor
+INFO - 2025-01-20 23:16:25,164: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-01-20 23:16:26,639: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-2-Solicitar arquivo específico'
+INFO - 2025-01-20 23:16:31,243: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-658BAE334A2D7C97-H_2-Imagem_3_30x30'
+INFO - 2025-01-20 23:16:31,243: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-01-20 23:16:31,298: Aplicando ganho de sinal: H_2-Imagem_3_30x30.csv
+INFO - 2025-01-20 23:16:31,332: Enviando ganho de sinal
+INFO - 2025-01-20 23:16:31,332: Terminou o envio
+INFO - 2025-01-20 23:16:45,152: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+INFO - 2025-01-20 23:16:54,335: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Receber Resultados'
+INFO - 2025-01-20 23:16:54,335: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-658BAE334A2D7C97'
+INFO - 2025-01-20 23:16:54,348: Remetente: ('127.0.0.1', 6000) - Recebido: '1'
+INFO - 2025-01-20 23:16:54,349: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-1-Confirmação'
+INFO - 2025-01-20 23:16:54,349: Remetente: ('127.0.0.1', 6000) - Recebido: '658BAE334A2D7C97-H_2-Imagem_3_30x30.csv'
+INFO - 2025-01-20 23:16:54,349: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-1'
+INFO - 2025-01-20 23:17:11,060: Destinatário: ('127.0.0.1', 6000) - Enviado: '5A45BA9A9C58FD24-H_2-Imagem_2_30x30.csv'
+INFO - 2025-01-20 23:17:11,060: Remetente: ('127.0.0.1', 6000) - Recebido: 'ERROR-3-Arquivo não encontrado!'
+INFO - 2025-01-20 23:17:18,586: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-01-20 23:17:21,490: Iniciando conexão com Servidor
+INFO - 2025-01-20 23:17:21,491: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-01-20 23:17:24,013: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Receber Resultados'
+INFO - 2025-01-20 23:17:24,013: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-C18ED335D6FF23F5'
+INFO - 2025-01-20 23:17:24,025: Remetente: ('127.0.0.1', 6000) - Recebido: '0'
+INFO - 2025-01-20 23:17:24,025: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-1-Confirmação'
+INFO - 2025-01-20 23:17:29,676: Destinatário: ('127.0.0.1', 6000) - Enviado: '5A45BA9A9C58FD24-H_2-Imagem_2_30x30.csv'
+ERROR - 2025-01-20 23:17:59,683: Removido do Servidor: ('127.0.0.1', 6000)
+INFO - 2025-01-20 23:17:59,697: Deletando Socket:  ('127.0.0.1', 6000)
