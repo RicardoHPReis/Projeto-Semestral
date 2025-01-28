@@ -8,7 +8,7 @@ import socket as s
 import time as t
 import os
 
-MODELOS_POSSIVEIS = ["H_2"]
+MODELOS_POSSIVEIS = ["H_1","H_2"]
 SINAIS_MODELO_1_POSSIVEIS = ["Imagem_1_60x60", "Imagem_2_60x60", "Imagem_3_60x60"]
 SINAIS_MODELO_2_POSSIVEIS = ["Imagem_1_30x30", "Imagem_2_30x30", "Imagem_3_30x30"]
 class Cliente:
@@ -27,7 +27,7 @@ class Cliente:
         self.__TAM_BUFFER = 2048
 
         self.__conexao_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
-        self.__conexao_socket.settimeout(30)
+        #self.__conexao_socket.settimeout(None)
     
     
     def __del__(self):
@@ -236,7 +236,7 @@ class Cliente:
         self.mensagem_envio("OK-1-Confirmação")
         
         if(dados[0] == "OK"):
-            os.makedirs("./download", exist_ok=True)
+            os.makedirs("./relatorios", exist_ok=True)
             
             num_pacotes = int(dados[2])
             num_digitos = int(dados[3])
@@ -247,7 +247,7 @@ class Cliente:
             hash_final = hash_inicio + 16
             checksum_completo = h.md5()
             
-            with open(os.path.join("./download", nome_arquivo), "wb") as arquivo:
+            with open(os.path.join("./relatorios", nome_arquivo), "wb") as arquivo:
                 for i in range(0, num_pacotes):
                     packet = self.__conexao_socket.recv(tam_buffer)
 

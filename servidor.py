@@ -24,7 +24,7 @@ class Servidor:
         self.__server_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.__server_socket.bind(self.__ENDERECO_IP)
         self.__server_socket.listen()
-        self.__server_socket.settimeout(60)
+        #self.__server_socket.settimeout(60)
         self.logger.info(f"Socket do servidor criado na porta: '{self.__PORTA_DO_SERVER}'")
         
     
@@ -142,7 +142,7 @@ class Servidor:
 
     def checksum_arquivo(self, nome_arquivo: str) -> str:
         checksum = h.md5()
-        with open(os.path.join("./content", nome_arquivo), "rb") as file:
+        with open(os.path.join("./download", nome_arquivo), "rb") as file:
             while data := file.read(self.__TAM_BUFFER):
                 checksum.update(data)
 
@@ -154,7 +154,7 @@ class Servidor:
         if nome_arquivo == "":
             return
         
-        num_pacotes: int = (os.path.getsize(os.path.join("./content", nome_arquivo)) // self.__TAM_BUFFER) + 1
+        num_pacotes: int = (os.path.getsize(os.path.join("./download", nome_arquivo)) // self.__TAM_BUFFER) + 1
         num_digitos: int = len(str(num_pacotes))
         num_buffer: int = num_digitos + 1 + 16 + 1 + self.__TAM_BUFFER
         checksum: str = self.checksum_arquivo(nome_arquivo)
@@ -164,7 +164,7 @@ class Servidor:
         if inicio[0] != "OK":
             return
 
-        with open(os.path.join("./content", nome_arquivo), "rb") as arquivo:
+        with open(os.path.join("./download", nome_arquivo), "rb") as arquivo:
             i = 0
             while data := arquivo.read(self.__TAM_BUFFER):
                 hash_ = h.md5(data).digest()
@@ -193,7 +193,7 @@ class Servidor:
     def retornar_nome_arquivos(self, cliente_socket:s.socket, endereco:tuple, nome_usuario:str) -> str:
         os.system('cls' if os.name == 'nt' else 'clear')
 
-        file_paths = os.listdir("./content")
+        file_paths = os.listdir("./download")
         arquivos_usuario = []
         for arq in file_paths:
             if nome_usuario in arq:
@@ -345,7 +345,7 @@ class Servidor:
         start_cpu = process.cpu_percent(interval=None)
         start_mem = process.memory_info().rss
         
-        nome_arquivo = modelo + "-" + modelo_imagem 
+        nome_arquivo = nome_usuario + "-" + modelo + "-" + modelo_imagem 
         H = np.genfromtxt("data/" + modelo + ".csv", delimiter=',')
         
         resultado, iter_count = self.calcular_CGNR(H, ganho_de_sinal)
@@ -359,23 +359,25 @@ class Servidor:
         total_time = end_time - start_time
         cpu_usage = end_cpu - start_cpu
         memory_usage = (end_mem - start_mem) / (1024 ** 2)  
-
-        os.makedirs("./content", exist_ok=True)
-        relatorio_path = f"./content/{nome_usuario}-{nome_arquivo}.csv"
-        with open(relatorio_path, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            writer.writerow(["Usuário", "Iterações", "Tempo Total (s)", "Uso de CPU (%)", "Uso de Memória (MB)"])
-            writer.writerow([nome_usuario, iter_count, total_time, cpu_usage, memory_usage])
-
-        self.logger.info(f"Relatório de desempenho salvo em {relatorio_path}")
-        self.mensagem_envio(cliente_socket, endereco, 'OK-Processo terminado')
+        
+        informacoes = (
+            f"Usuário: {nome_usuario}\n"
+            f"Iterações: {iter_count}\n"
+            f"Tempo Total (s): {total_time:.2f}\n"
+            f"Uso de CPU (%): {cpu_usage:.2f}\n"
+            f"Uso de Memória (MB): {memory_usage:.2f}"
+        )        
         #relatorio 
 
         plt.imshow(resultado, 'gray')
-        plt.title('Log')
+        plt.title('Relatório de Desempenho')
+        plt.gcf().text(0.02, 0.5, informacoes, fontsize=10, color='white', ha='left', va='center', bbox=dict(facecolor='black', alpha=0.5))
         print(iter_count)
         plt.savefig(f'download/{nome_arquivo}.png')
         plt.close()
+        
+        self.logger.info(f"Relatório de desempenho salvo em download/{nome_arquivo}.png")
+        self.mensagem_envio(cliente_socket, endereco, 'OK-Processo terminado')
         
         #return res_image, iter_count
 
