@@ -142,7 +142,7 @@ class Servidor:
 
     def checksum_arquivo(self, nome_arquivo: str) -> str:
         checksum = h.md5()
-        with open(os.path.join("./download", nome_arquivo), "rb") as file:
+        with open(os.path.join("./content", nome_arquivo), "rb") as file:
             while data := file.read(self.__TAM_BUFFER):
                 checksum.update(data)
 
@@ -154,7 +154,7 @@ class Servidor:
         if nome_arquivo == "":
             return
         
-        num_pacotes: int = (os.path.getsize(os.path.join("./download", nome_arquivo)) // self.__TAM_BUFFER) + 1
+        num_pacotes: int = (os.path.getsize(os.path.join("./content", nome_arquivo)) // self.__TAM_BUFFER) + 1
         num_digitos: int = len(str(num_pacotes))
         num_buffer: int = num_digitos + 1 + 16 + 1 + self.__TAM_BUFFER
         checksum: str = self.checksum_arquivo(nome_arquivo)
@@ -164,7 +164,7 @@ class Servidor:
         if inicio[0] != "OK":
             return
 
-        with open(os.path.join("./download", nome_arquivo), "rb") as arquivo:
+        with open(os.path.join("./content", nome_arquivo), "rb") as arquivo:
             i = 0
             while data := arquivo.read(self.__TAM_BUFFER):
                 hash_ = h.md5(data).digest()
@@ -193,7 +193,7 @@ class Servidor:
     def retornar_nome_arquivos(self, cliente_socket:s.socket, endereco:tuple, nome_usuario:str) -> str:
         os.system('cls' if os.name == 'nt' else 'clear')
 
-        file_paths = os.listdir("./download")
+        file_paths = os.listdir("./content")
         arquivos_usuario = []
         for arq in file_paths:
             if nome_usuario in arq:
@@ -373,10 +373,10 @@ class Servidor:
         plt.title('Relatório de Desempenho')
         plt.gcf().text(0.02, 0.5, informacoes, fontsize=10, color='white', ha='left', va='center', bbox=dict(facecolor='black', alpha=0.5))
         print(iter_count)
-        plt.savefig(f'download/{nome_arquivo}.png')
+        plt.savefig(f'content/{nome_arquivo}.png')
         plt.close()
         
-        self.logger.info(f"Relatório de desempenho salvo em download/{nome_arquivo}.png")
+        self.logger.info(f"Relatório de desempenho salvo em content/{nome_arquivo}.png")
         self.mensagem_envio(cliente_socket, endereco, 'OK-Processo terminado')
         
         #return res_image, iter_count
