@@ -11,6 +11,7 @@ import os
 MODELOS_POSSIVEIS = ["H_1","H_2"]
 SINAIS_MODELO_1_POSSIVEIS = ["Imagem_1_60x60", "Imagem_2_60x60", "Imagem_3_60x60"]
 SINAIS_MODELO_2_POSSIVEIS = ["Imagem_1_30x30", "Imagem_2_30x30", "Imagem_3_30x30"]
+
 class Cliente:
     def __init__(self):
         self.logger = l.getLogger(__name__)
@@ -19,7 +20,7 @@ class Cliente:
         self.__nome_arquivo = ''
         self.__modelo_tamanho = ''
         self.__modelo_imagem = ''
-        self.__ganho_de_sinal = ''
+        self.__ganho_de_sinal = None
 
         self.__NOME_DO_SERVER = '127.0.0.1'
         self.__PORTA_DO_SERVER = 6000
@@ -31,6 +32,11 @@ class Cliente:
     
     
     def __del__(self):
+        self.__nome_arquivo = ''
+        self.__modelo_tamanho = ''
+        self.__modelo_imagem = ''
+        self.__ganho_de_sinal = None
+        
         self.logger.info(f"Deletando Socket:  {self.__ENDERECO_IP}")
         self.__conexao_socket.close()
         
@@ -297,16 +303,18 @@ class Cliente:
                 self.mensagem_envio('OPTION-1-Solicitar arquivo aleatório')
                 self.aleatorizar_imagens()
                 self.enviar_modelo()
+                self.__ganho_de_sinal = None
                 self.opcoes_cliente()
             case 2:
                 self.mensagem_envio('OPTION-2-Solicitar arquivo específico')
                 self.escolher_arquivo()
                 self.enviar_modelo()
+                self.__ganho_de_sinal = None
                 self.opcoes_cliente()
             case 3:
                 self.mensagem_envio('OPTION-3-Receber Resultados')
                 self.requisitar_relatorio()
-                #self.ler_relatorio()
+                self.__ganho_de_sinal = None
                 self.opcoes_cliente()
             case 4:
                 self.mensagem_envio('OPTION-4-Fechar conexão')

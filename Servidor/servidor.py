@@ -20,15 +20,19 @@ class Servidor:
         self.__ENDERECO_IP = (self.__NOME_DO_SERVER, self.__PORTA_DO_SERVER)
         
         self.__clientes = []
+        self.__H_1 = None
+        self.__H_2 = None
 
         self.__server_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.__server_socket.bind(self.__ENDERECO_IP)
         self.__server_socket.listen()
-        #self.__server_socket.settimeout(60)
         self.logger.info(f"Socket do servidor criado na porta: '{self.__PORTA_DO_SERVER}'")
         
     
     def __del__(self):
+        self.__H_1 = None
+        self.__H_2 = None
+        
         self.logger.info(f"Socket finalizado!")
         for cliente in self.__clientes:
             self.cliente.close()
@@ -112,6 +116,7 @@ class Servidor:
                     self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
                     ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
                     self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario)
+                    ganho_de_sinal = None
                     self.opcoes_servidor(cliente_socket, endereco)
             case 2:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
@@ -281,21 +286,60 @@ class Servidor:
         return f, iter_count
     
     
-    def calcular_CGNR(self, H:np.ndarray, g:np.ndarray) -> tuple[np.ndarray, int]:
-        f = np.zeros(H.shape[1])  # Inicializa f como um vetor de zeros
-        r = g - np.dot(H, f)
-        z = np.dot(H.T, r)
+    def calcular_CGNR_H_1(self, g:np.ndarray) -> tuple[np.ndarray, int]:
+        f = np.zeros(self.__H_1.shape[1])  # Inicializa f como um vetor de zeros
+        r = g - np.dot(self.__H_1, f)
+        z = np.dot(self.__H_1.T, r)
         p = z
         iter_count = 0
 
         porc = len(g)//100
         antigo = -1
         for i in range(len(g)):
-            w = np.dot(H, p)
+            w = np.dot(self.__H_1, p)
             alpha = np.dot(z.T, z) / np.dot(w.T, w)
             f = f + alpha * p
             r_next = r - alpha * w
-            z_next = np.dot(H.T, r_next)
+            z_next = np.dot(self.__H_1.T, r_next)
+
+            error = abs(np.linalg.norm(r, ord = 2) - np.linalg.norm(r_next, ord = 2))
+            if error < 1e-4:
+                self.logger.info("Erro menor que 1e-4")
+                break
+
+            beta = np.dot(z_next.T, z_next) / np.dot(z.T, z)
+            p = z_next + beta * p
+            r = r_next
+            z = z_next
+            
+            iter_count += 1            
+            if antigo < i//porc:
+                antigo+=1
+                os.system('cls' if os.name == 'nt' else 'clear')
+                self.titulo()
+                print(f'Processamento: {antigo}% de {len(g)} pacotes')
+                self.logger.info(f'Processamento: {antigo}% de {len(g)} pacotes')
+
+        print('Terminou o processamento')
+        self.logger.info(f"Terminou o processamento")
+        return f, iter_count
+    
+    
+    def calcular_CGNR_H_2(self, g:np.ndarray) -> tuple[np.ndarray, int]:
+        f = np.zeros(self.__H_2.shape[1])  # Inicializa f como um vetor de zeros
+        r = g - np.dot(self.__H_2, f)
+        z = np.dot(self.__H_2.T, r)
+        p = z
+        iter_count = 0
+
+        porc = len(g)//100
+        antigo = -1
+        for i in range(len(g)):
+            w = np.dot(self.__H_2, p)
+            alpha = np.dot(z.T, z) / np.dot(w.T, w)
+            f = f + alpha * p
+            r_next = r - alpha * w
+            z_next = np.dot(self.__H_2.T, r_next)
 
             error = abs(np.linalg.norm(r, ord = 2) - np.linalg.norm(r_next, ord = 2))
             if error < 1e-4:
@@ -341,14 +385,20 @@ class Servidor:
     
     def reconstruir_imagem(self, cliente_socket:s.socket, endereco:tuple, modelo:str, modelo_imagem:str, ganho_de_sinal:np.ndarray, nome_usuario:str) -> None:
         process = ps.Process(os.getpid())
+        
         start_time = t.time()
         start_cpu = process.cpu_percent(interval=None)
         start_mem = process.memory_info().rss
         
         nome_arquivo = nome_usuario + "-" + modelo + "-" + modelo_imagem 
-        H = np.genfromtxt("data/" + modelo + ".csv", delimiter=',')
         
-        resultado, iter_count = self.calcular_CGNR(H, ganho_de_sinal)
+        resultado = None
+        iter_count = 0
+        if modelo == "H_1":
+            resultado, iter_count = self.calcular_CGNR_H_1(ganho_de_sinal)
+        else:
+            resultado, iter_count = self.calcular_CGNR_H_2(ganho_de_sinal)
+            
         len_image  = int(np.sqrt(len(resultado)))
         resultado = resultado.reshape((len_image, len_image), order='F')
         
@@ -384,12 +434,21 @@ class Servidor:
 
     def run(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
+        self.titulo()
+        print('Lendo arquivos base...')
+        if self.__H_1 == None:
+            self.__H_1 = np.genfromtxt("./data/H_1.csv", delimiter=',')
+            self.__H_2 = np.genfromtxt("./data/H_2.csv", delimiter=',')
+        
+        os.system('cls' if os.name == 'nt' else 'clear')
         iniciar_server = self.iniciar_servidor()
+        
         os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
-        print('Esperando resposta')
+        print('Esperando resposta...')
 
         while iniciar_server:
+            #self.__server_socket.settimeout(60)
             cliente_socket, endereco = self.__server_socket.accept()
             self.__clientes.append(cliente_socket)
             
