@@ -9,6 +9,7 @@ import time as t
 import os
 
 MODELOS_POSSIVEIS = ["H_1","H_2"]
+MODELOS_ALGORITMOS_POSSIVEIS = ["CGNE", "CGNR"]
 SINAIS_MODELO_1_POSSIVEIS = ["Imagem_1_60x60", "Imagem_2_60x60", "Imagem_3_60x60"]
 SINAIS_MODELO_2_POSSIVEIS = ["Imagem_1_30x30", "Imagem_2_30x30", "Imagem_3_30x30"]
 
@@ -35,6 +36,7 @@ class Cliente:
         self.__nome_arquivo = ''
         self.__modelo_tamanho = ''
         self.__modelo_imagem = ''
+        self.__modelo_algoritmo = ''
         self.__ganho_de_sinal = None
         
         self.logger.info(f"Deletando Socket:  {self.__ENDERECO_IP}")
@@ -137,12 +139,13 @@ class Cliente:
 
     def aleatorizar_imagens(self) -> None:
         self.__modelo_tamanho = ri.choice(MODELOS_POSSIVEIS)
+        self.__modelo_algoritmo = ri.choice(MODELOS_ALGORITMOS_POSSIVEIS)
         if self.__modelo_tamanho == "H_1":
             self.__modelo_imagem = ri.choice(SINAIS_MODELO_1_POSSIVEIS)
         else:
             self.__modelo_imagem = ri.choice(SINAIS_MODELO_2_POSSIVEIS)
         self.__nome_arquivo = self.__modelo_tamanho + '-' + self.__modelo_imagem + ".csv"
-        self.mensagem_envio(f'OK-{self.__NOME_DO_USUARIO}-{self.__modelo_tamanho}-{self.__modelo_imagem}')
+        self.mensagem_envio(f'OK-{self.__NOME_DO_USUARIO}-{self.__modelo_tamanho}-{self.__modelo_imagem}-{self.__modelo_algoritmo}')
     
 
     def escolher_arquivo(self) -> None:
@@ -292,6 +295,7 @@ class Cliente:
     def opcoes_cliente(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
+        print("0) Enviar 10 solitações aleatórias")
         print("1) Solicitar arquivo aleatório.")
         print("2) Solicitar arquivo específico.")
         print("3) Receber resultados.")
@@ -299,6 +303,13 @@ class Cliente:
         
         opcao = int(input("Escolha uma opção: "))
         match opcao:
+            case 0:
+                for _ in range(10):
+                    self.mensagem_envio('OPTION-1-Solicitar arquivo aleatório')
+                    self.aleatorizar_imagens()
+                    self.enviar_modelo()
+                    self.__ganho_de_sinal = None
+                    t.sleep(r.uniform(1, 5))
             case 1:
                 self.mensagem_envio('OPTION-1-Solicitar arquivo aleatório')
                 self.aleatorizar_imagens()

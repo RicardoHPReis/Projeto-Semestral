@@ -8,6 +8,7 @@ import time as t
 import psutil as ps
 import csv
 import os
+from queue import Queue
 
 class Servidor:
     def __init__(self):
@@ -22,7 +23,10 @@ class Servidor:
         self.__clientes = []
         self.__H_1 = None
         self.__H_2 = None
-
+        self.max_clientes_concorrentes = 2  
+        self.semaforo = th.Semaphore(self.max_clientes_concorrentes)  
+        self.fila_clientes = Queue()
+    
         self.__server_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.__server_socket.bind(self.__ENDERECO_IP)
         self.__server_socket.listen()
@@ -112,10 +116,11 @@ class Servidor:
                 modelo = resposta[2]
                 modelo_imagem = resposta[3]
                 nome_usuario = resposta[1]
+                modelo_algoritmo = resposta[4]
                 if resposta[0] == "OK":
                     self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
                     ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
-                    self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario)
+                    self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario, modelo_algoritmo)
                     ganho_de_sinal = None
                     self.opcoes_servidor(cliente_socket, endereco)
             case 2:
@@ -123,10 +128,11 @@ class Servidor:
                 modelo = resposta[2]
                 modelo_imagem = resposta[3]
                 nome_usuario = resposta[1]
+                modelo_algoritmo = resposta[4]
                 if resposta[0] == "OK":
                     self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
                     ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
-                    self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario)
+                    self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario, modelo_algoritmo)
                     self.opcoes_servidor(cliente_socket, endereco)
             case 3:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
@@ -285,6 +291,11 @@ class Servidor:
         self.logger.info(f"Terminou o processamento")
         return f, iter_count
     
+    def calcular_CGNE_H_1(self, g:np.ndarray) -> tuple[np.ndarray, int]:
+        return
+    
+    def calcular_CGNE_H_2(self, g:np.ndarray) -> tuple[np.ndarray, int]:
+        return
     
     def calcular_CGNR_H_1(self, g:np.ndarray) -> tuple[np.ndarray, int]:
         f = np.zeros(self.__H_1.shape[1])  # Inicializa f como um vetor de zeros
@@ -383,21 +394,27 @@ class Servidor:
         return np.frombuffer(received_data, dtype=np.float64)
 
     
-    def reconstruir_imagem(self, cliente_socket:s.socket, endereco:tuple, modelo:str, modelo_imagem:str, ganho_de_sinal:np.ndarray, nome_usuario:str) -> None:
+    def reconstruir_imagem(self, cliente_socket:s.socket, endereco:tuple, modelo:str, modelo_imagem:str, ganho_de_sinal:np.ndarray, nome_usuario:str, modelo_algoritmo:str) -> None:
         process = ps.Process(os.getpid())
         
         start_time = t.time()
         start_cpu = process.cpu_percent(interval=None)
         start_mem = process.memory_info().rss
         
-        nome_arquivo = nome_usuario + "-" + modelo + "-" + modelo_imagem 
+        nome_arquivo = nome_usuario + "-" + modelo + "-" + modelo_imagem + "-" + modelo_algoritmo
         
         resultado = None
         iter_count = 0
         if modelo == "H_1":
-            resultado, iter_count = self.calcular_CGNR_H_1(ganho_de_sinal)
+            if modelo_algoritmo == "CGNE":
+                resultado, iter_count = self.calcular_CGNE_H_1(ganho_de_sinal)
+            else:
+                resultado, iter_count = self.calcular_CGNR_H_1(ganho_de_sinal)
         else:
-            resultado, iter_count = self.calcular_CGNR_H_2(ganho_de_sinal)
+            if modelo_algoritmo == "CGNE":
+                resultado, iter_count = self.calcular_CGNE_H_2(ganho_de_sinal)
+            else:
+                resultado, iter_count = self.calcular_CGNR_H_2(ganho_de_sinal)
             
         len_image  = int(np.sqrt(len(resultado)))
         resultado = resultado.reshape((len_image, len_image), order='F')
@@ -431,6 +448,15 @@ class Servidor:
         
         #return res_image, iter_count
 
+    def processar_cliente(self):
+        self.semaforo.acquire()
+
+        cliente_socket, endereco = self.fila_clientes.get()
+
+        try:
+            self.opcoes_servidor(cliente_socket, endereco)
+        finally:
+            self.semaforo.release()
 
     def run(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -448,13 +474,13 @@ class Servidor:
         print('Esperando resposta...')
 
         while iniciar_server:
-            #self.__server_socket.settimeout(60)
             cliente_socket, endereco = self.__server_socket.accept()
             self.__clientes.append(cliente_socket)
-            
-            thread = th.Thread(target=self.opcoes_servidor, args=(cliente_socket, endereco), daemon=True)
+
+            self.fila_clientes.put((cliente_socket, endereco))  
+
+            thread = th.Thread(target=self.processar_cliente, daemon=True)
             thread.start()
-        
 
 if __name__ == "__main__":
     server = Servidor()
