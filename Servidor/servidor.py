@@ -49,7 +49,7 @@ class Servidor:
             
         self.__clientes.clear()
         self.__server_socket.close()
-        os.system('cls' if os.name == 'nt' else 'clear')
+        #os.system('cls' if os.name == 'nt' else 'clear')
         
     
     def titulo(self) -> None:
@@ -81,7 +81,7 @@ class Servidor:
         inicializar = ''
         iniciar_server = False
         while inicializar == '':
-            os.system('cls' if os.name == 'nt' else 'clear')
+            #os.system('cls' if os.name == 'nt' else 'clear')
             self.titulo()
             inicializar = input("Deseja inicializar o servidor [S/N] ? ").lower().strip()
             match inicializar:
@@ -119,7 +119,7 @@ class Servidor:
 
 
     def opcoes_servidor(self, cliente_socket:s.socket, endereco:tuple) -> None:
-        os.system('cls' if os.name == 'nt' else 'clear')
+        #os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
         print(f"{len(self.__clientes)} cliente(s) conectado(s)...")
         
@@ -186,7 +186,7 @@ class Servidor:
                     self.__clientes.remove(cliente_socket)
                     self.mensagem_envio(cliente_socket, endereco, 'OK-8-Desconectado')
                     
-                    os.system('cls' if os.name == 'nt' else 'clear')
+                    #os.system('cls' if os.name == 'nt' else 'clear')
                     self.titulo()
                     print(f"{len(self.__clientes)} cliente(s) conectado(s)...")
 
@@ -242,7 +242,7 @@ class Servidor:
 
 
     def retornar_nome_arquivos(self, cliente_socket:s.socket, endereco:tuple, nome_usuario:str) -> str:
-        os.system('cls' if os.name == 'nt' else 'clear')
+        #os.system('cls' if os.name == 'nt' else 'clear')
 
         file_paths = os.listdir("./content")
         arquivos_usuario = []
@@ -258,20 +258,20 @@ class Servidor:
         
         if(confirmacao_tam[0] == "ERROR"):
             self.logger.error("ERRO-1-Erro na requisição")
-            os.system('cls' if os.name == 'nt' else 'clear')
+            #os.system('cls' if os.name == 'nt' else 'clear')
             self.titulo()
             print("Erro na Requisição")
             t.sleep(2)
-            os.system('cls' if os.name == 'nt' else 'clear')
+            #os.system('cls' if os.name == 'nt' else 'clear')
             return ""
         
         elif(num_arquivos <= 0):
             self.logger.error("ERRO-2-Nenhum arquivo no servidor")
-            os.system('cls' if os.name == 'nt' else 'clear')
+            #os.system('cls' if os.name == 'nt' else 'clear')
             self.titulo()
             print("Nenhum arquivo no servidor")
             t.sleep(2)
-            os.system('cls' if os.name == 'nt' else 'clear')
+            #os.system('cls' if os.name == 'nt' else 'clear')
             return ""
             
         else:
@@ -312,6 +312,10 @@ class Servidor:
                 self.logger.info("Erro menor que 1e-4")
                 break
 
+            if iter_count > 10:
+                self.logger.info("Passou de 10 interações")
+                break
+
             beta = np.dot(r_next.T, r_next) / np.dot(r.T, r)
             p = beta * p + np.dot(self.__H_1.T, r_next) if modelo == "H_1" else beta * p + np.dot(self.__H_2.T, r_next)
             r = r_next
@@ -319,7 +323,7 @@ class Servidor:
             iter_count += 1            
             if antigo < i//porc:
                 antigo+=1
-                os.system('cls' if os.name == 'nt' else 'clear')
+                #os.system('cls' if os.name == 'nt' else 'clear')
                 self.titulo()
                 print(f'Processamento: {antigo}% de {len(g)} pacotes')
                 self.logger.info(f'Processamento: {antigo}% de {len(g)} pacotes')
@@ -359,7 +363,7 @@ class Servidor:
             iter_count += 1            
             if antigo < i//porc:
                 antigo+=1
-                os.system('cls' if os.name == 'nt' else 'clear')
+                #os.system('cls' if os.name == 'nt' else 'clear')
                 self.titulo()
                 print(f'Processamento: {antigo}% de {len(g)} pacotes')
                 self.logger.info(f'Processamento: {antigo}% de {len(g)} pacotes')
@@ -408,7 +412,7 @@ class Servidor:
         len_image  = int(np.sqrt(len(resultado)))
         resultado = resultado.reshape((len_image, len_image), order='F')
         
-        horario_inicio = d.datetime.now()
+        horario_fim = d.datetime.now()
         end_time = t.time()
         end_cpu = process.cpu_percent(interval=None)
         end_mem = process.memory_info().rss
@@ -443,9 +447,17 @@ class Servidor:
         os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
         print('Lendo arquivos base...')
-        if self.__H_1 == None and self.__H_2 == None:
-            #self.__H_1 = np.genfromtxt("./data/H_1.csv", delimiter=',')
+        if not os.path.exists("./data/H_1.npy") or not os.path.exists("./data/H_2.npy"):
+            # Se não existirem, lê os CSVs e salva como .npy
+            self.__H_1 = np.genfromtxt("./data/H_1.csv", delimiter=',')
             self.__H_2 = np.genfromtxt("./data/H_2.csv", delimiter=',')
+            np.save("./data/H_1.npy", self.__H_1)
+            np.save("./data/H_2.npy", self.__H_2)
+        else:
+            # Se existirem, carrega diretamente os .npy
+            self.__H_1 = np.load("./data/H_1.npy")
+            self.__H_2 = np.load("./data/H_2.npy")
+
         
         os.system('cls' if os.name == 'nt' else 'clear')
         iniciar_server = self.iniciar_servidor()
