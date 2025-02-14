@@ -1,0 +1,115 @@
+INFO - 2025-02-14 00:31:32,860: Iniciando conexão com Servidor
+INFO - 2025-02-14 00:31:32,860: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:31:40,386: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:32:16,756: Iniciando conexão com Servidor
+INFO - 2025-02-14 00:32:16,756: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:32:25,587: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:32:57,038: Iniciando conexão com Servidor
+INFO - 2025-02-14 00:32:57,039: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:33:05,338: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-1-Solicitar arquivo aleatório'
+INFO - 2025-02-14 00:33:05,339: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-77WIT7TH-H_2-Imagem_3_30x30-CGNE'
+INFO - 2025-02-14 00:33:05,339: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 00:33:05,385: Aplicando ganho de sinal: H_2-Imagem_3_30x30.csv
+INFO - 2025-02-14 00:33:05,418: Enviando ganho de sinal
+INFO - 2025-02-14 00:33:05,419: Terminou o envio
+INFO - 2025-02-14 00:39:05,088: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+INFO - 2025-02-14 00:39:07,540: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-1-Solicitar arquivo aleatório'
+INFO - 2025-02-14 00:39:07,540: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-77WIT7TH-H_2-Imagem_3_30x30-CGNE'
+INFO - 2025-02-14 00:39:53,491: Iniciando conexão com Servidor
+INFO - 2025-02-14 00:39:53,491: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:39:55,845: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-2-Solicitar arquivo aleatório'
+INFO - 2025-02-14 00:39:55,846: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-48H7KGJS-H_2-Imagem_2_30x30-CGNE'
+INFO - 2025-02-14 00:39:55,846: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 00:39:55,904: Aplicando ganho de sinal: H_2-Imagem_2_30x30.csv
+INFO - 2025-02-14 00:39:55,938: Enviando ganho de sinal
+INFO - 2025-02-14 00:39:55,938: Terminou o envio
+INFO - 2025-02-14 00:40:23,080: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:42:05,359: Iniciando conexão com Servidor
+INFO - 2025-02-14 00:42:05,359: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:42:09,565: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 00:42:21,613: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-T2AR8C5T-H_1-Imagem_1_60x60-CGNE'
+INFO - 2025-02-14 00:42:21,614: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 00:42:21,692: Aplicando ganho de sinal: H_1-Imagem_1_60x60.csv
+INFO - 2025-02-14 00:42:21,755: Enviando ganho de sinal
+INFO - 2025-02-14 00:42:21,755: Terminou o envio
+ERROR - 2025-02-14 00:42:38,479: Removido do Servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:42:38,490: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:43:16,627: Iniciando conexão com Servidor
+INFO - 2025-02-14 00:43:16,630: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:43:21,403: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 00:43:30,829: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-Z89F5AM3-H_2-Imagem_1_30x30-CGNE'
+INFO - 2025-02-14 00:44:20,910: Iniciando conexão com Servidor
+INFO - 2025-02-14 00:44:20,910: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:44:23,276: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 00:44:34,857: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-FI920W4T-H_2-Imagem_1_30x30-CGNE'
+INFO - 2025-02-14 00:44:34,858: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 00:44:34,900: Aplicando ganho de sinal: H_2-Imagem_1_30x30.csv
+INFO - 2025-02-14 00:44:34,934: Enviando ganho de sinal
+INFO - 2025-02-14 00:44:34,934: Terminou o envio
+INFO - 2025-02-14 00:44:35,310: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+INFO - 2025-02-14 00:44:53,906: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 00:45:04,953: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-FI920W4T-H_2-Imagem_2_30x30-CGNE'
+INFO - 2025-02-14 00:45:04,953: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 00:45:04,985: Aplicando ganho de sinal: H_2-Imagem_2_30x30.csv
+INFO - 2025-02-14 00:45:05,019: Enviando ganho de sinal
+INFO - 2025-02-14 00:45:05,020: Terminou o envio
+INFO - 2025-02-14 00:45:05,338: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+INFO - 2025-02-14 00:45:14,525: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 00:45:21,139: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-FI920W4T-H_2-Imagem_3_30x30-CGNE'
+INFO - 2025-02-14 00:45:21,140: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 00:45:21,171: Aplicando ganho de sinal: H_2-Imagem_3_30x30.csv
+INFO - 2025-02-14 00:45:21,208: Enviando ganho de sinal
+INFO - 2025-02-14 00:45:21,209: Terminou o envio
+INFO - 2025-02-14 00:50:57,336: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+INFO - 2025-02-14 00:52:09,283: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-4-Receber Resultados'
+INFO - 2025-02-14 00:52:09,283: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-FI920W4T'
+INFO - 2025-02-14 00:52:09,295: Remetente: ('127.0.0.1', 6000) - Recebido: '3'
+INFO - 2025-02-14 00:52:09,295: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-1-Confirmação'
+INFO - 2025-02-14 00:52:09,296: Remetente: ('127.0.0.1', 6000) - Recebido: 'FI920W4T-H_2-Imagem_1_30x30-CGNE.png'
+INFO - 2025-02-14 00:52:09,296: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-1'
+INFO - 2025-02-14 00:52:09,296: Remetente: ('127.0.0.1', 6000) - Recebido: 'FI920W4T-H_2-Imagem_2_30x30-CGNE.png'
+INFO - 2025-02-14 00:52:09,296: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-2'
+INFO - 2025-02-14 00:52:09,296: Remetente: ('127.0.0.1', 6000) - Recebido: 'FI920W4T-H_2-Imagem_3_30x30-CGNE.png'
+INFO - 2025-02-14 00:52:09,296: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-3'
+INFO - 2025-02-14 00:52:16,029: Destinatário: ('127.0.0.1', 6000) - Enviado: 'FI920W4T-H_2-Imagem_2_30x30-CGNE.png'
+INFO - 2025-02-14 00:52:16,029: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-1-Confirmação'
+INFO - 2025-02-14 00:52:16,031: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-2-11-2-2068-ad5cd9a4fb5030fd86bdc69ade2466d1'
+INFO - 2025-02-14 00:52:16,031: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-1-Confirmação'
+INFO - 2025-02-14 00:52:16,032: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-1'
+INFO - 2025-02-14 00:52:16,032: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-2'
+INFO - 2025-02-14 00:52:16,032: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-3'
+INFO - 2025-02-14 00:52:16,032: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-4'
+INFO - 2025-02-14 00:52:16,033: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-5'
+INFO - 2025-02-14 00:52:16,033: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-6'
+INFO - 2025-02-14 00:52:16,033: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-7'
+INFO - 2025-02-14 00:52:16,034: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-8'
+INFO - 2025-02-14 00:52:16,034: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-9'
+INFO - 2025-02-14 00:52:16,034: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-10'
+INFO - 2025-02-14 00:52:16,035: Destinatário: ('127.0.0.1', 6000) - Enviado: 'ACK-11'
+INFO - 2025-02-14 00:52:16,049: 'OK-4-Arquivo transferido com sucesso!'
+INFO - 2025-02-14 00:52:23,500: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-5-Fechar conexão'
+INFO - 2025-02-14 00:52:23,501: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-8-Desconectar servidor'
+INFO - 2025-02-14 00:52:23,501: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-8-Desconectado'
+INFO - 2025-02-14 00:52:25,518: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:59:27,819: Iniciando conexão com Servidor
+INFO - 2025-02-14 00:59:27,821: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 00:59:29,918: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 00:59:41,326: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-DKWZAXRU-H_1-Imagem_1_60x60-CGNE'
+INFO - 2025-02-14 00:59:41,327: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 00:59:41,413: Aplicando ganho de sinal: H_1-Imagem_1_60x60.csv
+INFO - 2025-02-14 00:59:41,475: Enviando ganho de sinal
+INFO - 2025-02-14 00:59:41,477: Terminou o envio
+INFO - 2025-02-14 00:59:45,265: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+INFO - 2025-02-14 00:59:55,952: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 01:00:04,863: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-DKWZAXRU-H_1-Imagem_2_60x60-CGNE'
+INFO - 2025-02-14 01:00:04,864: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 01:00:04,931: Aplicando ganho de sinal: H_1-Imagem_2_60x60.csv
+INFO - 2025-02-14 01:00:04,993: Enviando ganho de sinal
+INFO - 2025-02-14 01:00:04,993: Terminou o envio
+INFO - 2025-02-14 01:00:06,327: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+INFO - 2025-02-14 01:00:12,390: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 01:00:20,854: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-DKWZAXRU-H_1-Imagem_3_60x60-CGNE'
+INFO - 2025-02-14 01:00:20,854: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 01:00:20,924: Aplicando ganho de sinal: H_1-Imagem_3_60x60.csv
+INFO - 2025-02-14 01:00:20,984: Enviando ganho de sinal
+INFO - 2025-02-14 01:00:20,984: Terminou o envio

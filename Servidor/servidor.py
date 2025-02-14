@@ -8,7 +8,7 @@ import time as t
 import psutil as ps
 import csv
 import os
-from queue import Queue
+import queue
 
 class Servidor:
     def __init__(self):
@@ -24,9 +24,13 @@ class Servidor:
         
         self.__H_1 = None
         self.__H_2 = None
-        self.max_clientes_concorrentes = 2  
-        self.semaforo = th.Semaphore(self.max_clientes_concorrentes)  
-        self.fila_clientes = Queue()
+        MAX_CLIENTES_SIMULTANEOS = 3
+
+        # Crie um semáforo para controlar o número de clientes que podem processar
+        self.semaphore = th.Semaphore(MAX_CLIENTES_SIMULTANEOS)
+
+        # Crie uma fila para armazenar os clientes que estão esperando
+        self.fila_espera = queue.Queue()
     
         self.__server_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
         self.__server_socket.bind(self.__ENDERECO_IP)
@@ -100,6 +104,19 @@ class Servidor:
         return iniciar_server
 
 
+    def processar_cliente(self, cliente_socket:s.socket, endereco:tuple, modelo:str, modelo_imagem:str, nome_usuario:str, modelo_algoritmo:str) -> None:
+        try:
+            self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
+            ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
+            self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario, modelo_algoritmo)
+            ganho_de_sinal = None
+        finally:
+            self.semaphore.release()
+            if not self.fila_espera.empty():
+                proximo_cliente = self.fila_espera.get()
+                proximo_cliente.start()
+
+
     def opcoes_servidor(self, cliente_socket:s.socket, endereco:tuple) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
@@ -119,11 +136,20 @@ class Servidor:
                 nome_usuario = resposta[1]
                 modelo_algoritmo = resposta[4]
                 if resposta[0] == "OK":
-                    self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
-                    ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
-                    self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario, modelo_algoritmo)
-                    ganho_de_sinal = None
-                    self.opcoes_servidor(cliente_socket, endereco)
+                    if not self.semaphore.acquire(blocking=False):  # Tenta adquirir o semáforo sem bloquear
+                        self.fila_espera.put(th.Thread(target=self.processar_cliente, args=(cliente_socket, endereco, modelo, modelo_imagem, nome_usuario, modelo_algoritmo)))
+                        #self.mensagem_envio(cliente_socket, endereco, 'WAIT-Espere na fila')
+                        return
+                    try:
+                        self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
+                        ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
+                        self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario, modelo_algoritmo)
+                        ganho_de_sinal = None
+                    finally:
+                        self.semaphore.release()
+                        if not self.fila_espera.empty():
+                            proximo_cliente = self.fila_espera.get()
+                            proximo_cliente.start()
             case 2:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
                 modelo = resposta[2]
@@ -270,28 +296,24 @@ class Servidor:
         # Inicializa f como um vetor de zeros
         f = np.zeros(self.__H_1.shape[1]) if modelo == "H_1" else np.zeros(self.__H_2.shape[1])
         r = g - np.dot(self.__H_1, f) if modelo == "H_1" else g - np.dot(self.__H_2, f)
-        z = np.dot(self.__H_1.T, r) if modelo == "H_1" else np.dot(self.__H_2.T, r)
-        p = z
+        p = np.dot(self.__H_1.T, r) if modelo == "H_1" else np.dot(self.__H_2.T, r)
         iter_count = 0
 
         porc = len(g)//100
         antigo = -1
         for i in range(len(g)):
-            w = np.dot(self.__H_1, p) if modelo == "H_1" else np.dot(self.__H_2, p)
-            alpha = np.dot(z.T, z) / np.dot(w.T, w)
+            alpha = np.dot(r.T, r) / np.dot(p.T, p)
             f = f + alpha * p
-            r_next = r - alpha * w
-            z_next = np.dot(self.__H_1.T, r_next) if modelo == "H_1" else np.dot(self.__H_2.T, r_next)
+            r_next = r - alpha * np.dot(self.__H_1, p) if modelo == "H_1" else r - alpha * np.dot(self.__H_2, p)
 
             error = abs(np.linalg.norm(r, ord = 2) - np.linalg.norm(r_next, ord = 2))
             if error < 1e-4:
                 self.logger.info("Erro menor que 1e-4")
                 break
 
-            beta = np.dot(z_next.T, z_next) / np.dot(z.T, z)
-            p = z_next + beta * p
+            beta = np.dot(r_next.T, r_next) / np.dot(r.T, r)
+            p = beta * p + np.dot(self.__H_1.T, r_next) if modelo == "H_1" else beta * p + np.dot(self.__H_2.T, r_next)
             r = r_next
-            z = z_next
                 
             iter_count += 1            
             if antigo < i//porc:
@@ -412,17 +434,6 @@ class Servidor:
         self.mensagem_envio(cliente_socket, endereco, 'OK-Processo terminado')
 
 
-    def processar_cliente(self):
-        self.semaforo.acquire()
-
-        cliente_socket, endereco = self.fila_clientes.get()
-
-        try:
-            self.opcoes_servidor(cliente_socket, endereco)
-        finally:
-            self.semaforo.release()
-            
-
     def run(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
@@ -439,13 +450,9 @@ class Servidor:
         print('Esperando resposta...')
 
         while iniciar_server:
-            self.__server_socket.settimeout(60)
             cliente_socket, endereco = self.__server_socket.accept()
             self.__clientes.append(cliente_socket)
-
-            self.fila_clientes.put((cliente_socket, endereco))  
-
-            thread = th.Thread(target=self.processar_cliente, daemon=True)
+            thread = th.Thread(target=self.opcoes_servidor, args=(cliente_socket, endereco), daemon=True)
             thread.start()
 
 

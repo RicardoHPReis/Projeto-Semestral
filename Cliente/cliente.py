@@ -1,5 +1,5 @@
-import Cryptodome.Random.random as ri
-import Cryptodome.Random as r
+import random as ri
+import string as st
 import threading as th
 import logging as l
 import hashlib as h
@@ -12,12 +12,13 @@ MODELOS_POSSIVEIS = ["H_1","H_2"]
 MODELOS_ALGORITMOS_POSSIVEIS = ["CGNE", "CGNR"]
 SINAIS_MODELO_1_POSSIVEIS = ["Imagem_1_60x60", "Imagem_2_60x60", "Imagem_3_60x60"]
 SINAIS_MODELO_2_POSSIVEIS = ["Imagem_1_30x30", "Imagem_2_30x30", "Imagem_3_30x30"]
+ALFABETO:list = st.ascii_uppercase + st.digits
 
 class Cliente:
     def __init__(self):
         self.logger = l.getLogger(__name__)
         l.basicConfig(filename="./log/cliente.log", encoding="utf-8", level=l.INFO, format="%(levelname)s - %(asctime)s: %(message)s")
-        self.__NOME_DO_USUARIO = r.get_random_bytes(8).hex().upper()
+        self.__NOME_DO_USUARIO = "".join(ri.choice(ALFABETO) for _ in range(8))
         self.__nome_arquivo = ''
         self.__modelo_tamanho = ''
         self.__modelo_imagem = ''
@@ -45,7 +46,7 @@ class Cliente:
         
     def titulo(self) -> None:
         print("--------------------------")
-        print(f"CLIENTE: {self.__NOME_DO_USUARIO}")
+        print(f"    CLIENTE: {self.__NOME_DO_USUARIO}")
         print("--------------------------\n")
         
 
@@ -165,13 +166,30 @@ class Cliente:
             else:
                 print('A escolha precisa estar nas opções acima!')
                 t.sleep(2)
+                
+        funcao_escolhida = False      
+        while not funcao_escolhida:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            self.titulo()
+            print('Funções possíveis para escolher:')
+            for funcao in MODELOS_ALGORITMOS_POSSIVEIS:
+                print(funcao)
+
+            nome_funcao = input("\nDigite o nome da função que você queira utilizar: ")
+            
+            if nome_funcao in MODELOS_ALGORITMOS_POSSIVEIS:
+                funcao_escolhida = True
+            else:
+                print('A escolha precisa estar nas opções acima!')
+                t.sleep(2)
         
         modelos = self.__nome_arquivo.split("-")
         self.__modelo_tamanho = modelos[0]
         self.__modelo_imagem = modelos[1].split(".")[0]
-        
         self.__nome_arquivo = self.__modelo_tamanho + '-' + self.__modelo_imagem + ".csv"
-        self.mensagem_envio(f'OK-{self.__NOME_DO_USUARIO}-{self.__modelo_tamanho}-{self.__modelo_imagem}')
+        self.__modelo_algoritmo = nome_funcao
+        
+        self.mensagem_envio(f'OK-{self.__NOME_DO_USUARIO}-{self.__modelo_tamanho}-{self.__modelo_imagem}-{self.__modelo_algoritmo}')
 
 
     def enviar_modelo(self) -> None:
@@ -181,11 +199,9 @@ class Cliente:
             self.logger.info("Enviando ganho de sinal") 
             ganho_sinal_byte = self.__ganho_de_sinal.tobytes()
         
-            # Send the size of the serialized data first
             data_size = len(ganho_sinal_byte)
             self.__conexao_socket.sendall(data_size.to_bytes(8, byteorder='big'))
             
-            # Send the serialized data in chunks
             self.__conexao_socket.sendall(ganho_sinal_byte)
             self.logger.info("Terminou o envio") 
             print("Esperando retorno..")
@@ -295,11 +311,11 @@ class Cliente:
     def opcoes_cliente(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
-        print("0) Enviar 10 solitações aleatórias")
-        print("1) Solicitar arquivo aleatório.")
-        print("2) Solicitar arquivo específico.")
-        print("3) Receber resultados.")
-        print("4) Fechar conexão com o Servidor.\n")
+        print("1) Enviar 10 solitações aleatórias")
+        print("2) Solicitar arquivo aleatório.")
+        print("3) Solicitar arquivo específico.")
+        print("4) Receber resultados.")
+        print("5) Fechar conexão com o Servidor.\n")
         
         opcao = int(input("Escolha uma opção: "))
         match opcao:
@@ -309,7 +325,7 @@ class Cliente:
                     self.aleatorizar_imagens()
                     self.enviar_modelo()
                     self.__ganho_de_sinal = None
-                    t.sleep(r.uniform(1, 5))
+                    t.sleep(ri.uniform(1, 5))
             case 2:
                 self.mensagem_envio('OPTION-2-Solicitar arquivo aleatório')
                 self.aleatorizar_imagens()
