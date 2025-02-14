@@ -5,6 +5,7 @@ import hashlib as h
 import numpy as np
 import socket as s
 import time as t
+import datetime as d
 import psutil as ps
 import csv
 import os
@@ -390,6 +391,7 @@ class Servidor:
     def reconstruir_imagem(self, cliente_socket:s.socket, endereco:tuple, modelo:str, modelo_imagem:str, ganho_de_sinal:np.ndarray, nome_usuario:str, modelo_algoritmo:str) -> None:
         process = ps.Process(os.getpid())
         
+        horario_inicio = d.datetime.now()
         start_time = t.time()
         start_cpu = process.cpu_percent(interval=None)
         start_mem = process.memory_info().rss
@@ -406,17 +408,20 @@ class Servidor:
         len_image  = int(np.sqrt(len(resultado)))
         resultado = resultado.reshape((len_image, len_image), order='F')
         
+        horario_inicio = d.datetime.now()
         end_time = t.time()
         end_cpu = process.cpu_percent(interval=None)
         end_mem = process.memory_info().rss
     
-        total_time = end_time - start_time
+        total_time = end_time - start_time        
         cpu_usage = end_cpu - start_cpu
         memory_usage = (end_mem - start_mem) / (1024 ** 2)  
         
         informacoes = (
             f"Usuário: {nome_usuario}\n"
             f"Iterações: {iter_count}\n"
+            f"Tempo Inicial: {horario_inicio.strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"Tempo Final: {horario_fim.strftime('%Y-%m-%d %H:%M:%S')}\n"
             f"Tempo Total (s): {total_time:.2f}\n"
             f"Uso de CPU (%): {cpu_usage:.2f}\n"
             f"Uso de Memória (MB): {memory_usage:.2f}"
@@ -438,8 +443,8 @@ class Servidor:
         os.system('cls' if os.name == 'nt' else 'clear')
         self.titulo()
         print('Lendo arquivos base...')
-        if self.__H_1 == None:
-            self.__H_1 = np.genfromtxt("./data/H_1.csv", delimiter=',')
+        if self.__H_1 == None and self.__H_2 == None:
+            #self.__H_1 = np.genfromtxt("./data/H_1.csv", delimiter=',')
             self.__H_2 = np.genfromtxt("./data/H_2.csv", delimiter=',')
         
         os.system('cls' if os.name == 'nt' else 'clear')

@@ -8,7 +8,8 @@ import socket as s
 import time as t
 import os
 
-MODELOS_POSSIVEIS = ["H_1","H_2"]
+#MODELOS_POSSIVEIS = ["H_1","H_2"]
+MODELOS_POSSIVEIS = ["H_2"]
 MODELOS_ALGORITMOS_POSSIVEIS = ["CGNE", "CGNR"]
 SINAIS_MODELO_1_POSSIVEIS = ["Imagem_1_60x60", "Imagem_2_60x60", "Imagem_3_60x60"]
 SINAIS_MODELO_2_POSSIVEIS = ["Imagem_1_30x30", "Imagem_2_30x30", "Imagem_3_30x30"]
@@ -175,7 +176,7 @@ class Cliente:
             for funcao in MODELOS_ALGORITMOS_POSSIVEIS:
                 print(funcao)
 
-            nome_funcao = input("\nDigite o nome da função que você queira utilizar: ")
+            nome_funcao = input("\nDigite o nome da função que você queira utilizar: ").upper()
             
             if nome_funcao in MODELOS_ALGORITMOS_POSSIVEIS:
                 funcao_escolhida = True

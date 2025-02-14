@@ -113,3 +113,50 @@ INFO - 2025-02-14 01:00:20,854: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-P
 INFO - 2025-02-14 01:00:20,924: Aplicando ganho de sinal: H_1-Imagem_3_60x60.csv
 INFO - 2025-02-14 01:00:20,984: Enviando ganho de sinal
 INFO - 2025-02-14 01:00:20,984: Terminou o envio
+INFO - 2025-02-14 01:23:10,497: Iniciando conexão com Servidor
+INFO - 2025-02-14 01:23:10,497: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 01:23:14,315: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 01:23:32,621: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-22WJ73U1-H_2-Imagem_3_30x30-CGNR'
+INFO - 2025-02-14 01:23:32,622: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 01:23:32,664: Aplicando ganho de sinal: H_2-Imagem_3_30x30.csv
+INFO - 2025-02-14 01:23:32,686: Enviando ganho de sinal
+INFO - 2025-02-14 01:23:32,686: Terminou o envio
+INFO - 2025-02-14 01:23:34,902: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+INFO - 2025-02-14 01:23:45,808: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 01:24:00,173: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-22WJ73U1-H_1-Imagem_3_60x60-CGNR'
+INFO - 2025-02-14 01:24:00,173: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 01:24:00,220: Aplicando ganho de sinal: H_1-Imagem_3_60x60.csv
+INFO - 2025-02-14 01:24:00,284: Enviando ganho de sinal
+INFO - 2025-02-14 01:24:00,284: Terminou o envio
+INFO - 2025-02-14 01:24:35,781: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+INFO - 2025-02-14 01:24:52,048: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 01:24:59,857: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-22WJ73U1-H_1-Imagem_2_60x60-CGNR'
+INFO - 2025-02-14 01:24:59,857: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 01:24:59,911: Aplicando ganho de sinal: H_1-Imagem_2_60x60.csv
+INFO - 2025-02-14 01:24:59,959: Enviando ganho de sinal
+INFO - 2025-02-14 01:24:59,974: Terminou o envio
+INFO - 2025-02-14 01:25:04,388: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+INFO - 2025-02-14 01:37:54,319: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-02-14 01:40:34,238: Iniciando conexão com Servidor
+INFO - 2025-02-14 01:40:34,239: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 01:40:38,435: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 01:41:02,442: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-C94TECCF-H_1-Imagem_3_60x60-CGNR'
+INFO - 2025-02-14 01:41:02,442: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 01:41:02,507: Aplicando ganho de sinal: H_1-Imagem_3_60x60.csv
+INFO - 2025-02-14 01:41:02,568: Enviando ganho de sinal
+INFO - 2025-02-14 01:41:02,569: Terminou o envio
+ERROR - 2025-02-14 01:42:06,941: Removido do Servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 01:42:06,956: Deletando Socket:  ('127.0.0.1', 6000)
+INFO - 2025-02-14 01:56:04,795: Iniciando conexão com Servidor
+INFO - 2025-02-14 01:56:04,796: Cliente conectado ao servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 01:56:13,763: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OPTION-3-Solicitar arquivo específico'
+INFO - 2025-02-14 01:56:29,993: Destinatário: ('127.0.0.1', 6000) - Enviado: 'OK-DEJIRCO0-H_1-Imagem_3_60x60-CGNR'
+INFO - 2025-02-14 01:56:29,993: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Pode receber'
+INFO - 2025-02-14 01:56:30,060: Aplicando ganho de sinal: H_1-Imagem_3_60x60.csv
+INFO - 2025-02-14 01:56:30,228: Enviando ganho de sinal
+INFO - 2025-02-14 01:56:30,231: Terminou o envio
+INFO - 2025-02-14 01:57:06,226: Remetente: ('127.0.0.1', 6000) - Recebido: 'OK-Processo terminado'
+ERROR - 2025-02-14 02:02:32,923: Removido do Servidor: ('127.0.0.1', 6000)
+ERROR - 2025-02-14 02:02:32,928: Removido do Servidor: ('127.0.0.1', 6000)
+ERROR - 2025-02-14 02:02:32,928: Removido do Servidor: ('127.0.0.1', 6000)
+INFO - 2025-02-14 02:02:32,966: Deletando Socket:  ('127.0.0.1', 6000)
