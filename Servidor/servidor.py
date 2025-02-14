@@ -21,6 +21,7 @@ class Servidor:
         self.__ENDERECO_IP = (self.__NOME_DO_SERVER, self.__PORTA_DO_SERVER)
         
         self.__clientes = []
+        
         self.__H_1 = None
         self.__H_2 = None
         self.max_clientes_concorrentes = 2  
@@ -133,13 +134,25 @@ class Servidor:
                     self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
                     ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
                     self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario, modelo_algoritmo)
+                    ganho_de_sinal = None
                     self.opcoes_servidor(cliente_socket, endereco)
             case 3:
+                resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
+                modelo = resposta[2]
+                modelo_imagem = resposta[3]
+                nome_usuario = resposta[1]
+                modelo_algoritmo = resposta[4]
+                if resposta[0] == "OK":
+                    self.mensagem_envio(cliente_socket, endereco, 'OK-Pode receber')
+                    ganho_de_sinal = self.receber_ganho_sinal(cliente_socket, endereco)
+                    self.reconstruir_imagem(cliente_socket, endereco, modelo, modelo_imagem, ganho_de_sinal, nome_usuario, modelo_algoritmo)
+                    self.opcoes_servidor(cliente_socket, endereco)
+            case 4:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
                 nome_usuario = resposta[1]
                 self.enviar_relatorio(cliente_socket, endereco, nome_usuario)
                 self.opcoes_servidor(cliente_socket, endereco)
-            case 4:
+            case 5:
                 resposta = self.mensagem_recebimento(cliente_socket, endereco).split("-")
                 if resposta[0] == "OK":
                     self.logger.warning(f"Cliente desconectado: {endereco}")
@@ -253,21 +266,22 @@ class Servidor:
             return nome_arquivo
 
 
-    def calcular_CGNE(self, H:np.ndarray, g:np.ndarray) -> tuple[np.ndarray, int]:
-        f = np.zeros(H.shape[1])  # Inicializa f como um vetor de zeros
-        r = g - np.dot(H, f)
-        z = np.dot(H.T, r)
+    def calcular_CGNE(self, g:np.ndarray, modelo:str) -> tuple[np.ndarray, int]:
+        # Inicializa f como um vetor de zeros
+        f = np.zeros(self.__H_1.shape[1]) if modelo == "H_1" else np.zeros(self.__H_2.shape[1])
+        r = g - np.dot(self.__H_1, f) if modelo == "H_1" else g - np.dot(self.__H_2, f)
+        z = np.dot(self.__H_1.T, r) if modelo == "H_1" else np.dot(self.__H_2.T, r)
         p = z
         iter_count = 0
 
         porc = len(g)//100
         antigo = -1
         for i in range(len(g)):
-            w = np.dot(H, p)
+            w = np.dot(self.__H_1, p) if modelo == "H_1" else np.dot(self.__H_2, p)
             alpha = np.dot(z.T, z) / np.dot(w.T, w)
             f = f + alpha * p
             r_next = r - alpha * w
-            z_next = np.dot(H.T, r_next)
+            z_next = np.dot(self.__H_1.T, r_next) if modelo == "H_1" else np.dot(self.__H_2.T, r_next)
 
             error = abs(np.linalg.norm(r, ord = 2) - np.linalg.norm(r_next, ord = 2))
             if error < 1e-4:
@@ -278,51 +292,7 @@ class Servidor:
             p = z_next + beta * p
             r = r_next
             z = z_next
-            
-            iter_count += 1            
-            if antigo < i//porc:
-                antigo+=1
-                os.system('cls' if os.name == 'nt' else 'clear')
-                self.titulo()
-                print(f'Processamento: {antigo}% de {len(g)} pacotes')
-                self.logger.info(f'Processamento: {antigo}% de {len(g)} pacotes')
-
-        print('Terminou o processamento')
-        self.logger.info(f"Terminou o processamento")
-        return f, iter_count
-    
-    def calcular_CGNE_H_1(self, g:np.ndarray) -> tuple[np.ndarray, int]:
-        return
-    
-    def calcular_CGNE_H_2(self, g:np.ndarray) -> tuple[np.ndarray, int]:
-        return
-    
-    def calcular_CGNR_H_1(self, g:np.ndarray) -> tuple[np.ndarray, int]:
-        f = np.zeros(self.__H_1.shape[1])  # Inicializa f como um vetor de zeros
-        r = g - np.dot(self.__H_1, f)
-        z = np.dot(self.__H_1.T, r)
-        p = z
-        iter_count = 0
-
-        porc = len(g)//100
-        antigo = -1
-        for i in range(len(g)):
-            w = np.dot(self.__H_1, p)
-            alpha = np.dot(z.T, z) / np.dot(w.T, w)
-            f = f + alpha * p
-            r_next = r - alpha * w
-            z_next = np.dot(self.__H_1.T, r_next)
-
-            error = abs(np.linalg.norm(r, ord = 2) - np.linalg.norm(r_next, ord = 2))
-            if error < 1e-4:
-                self.logger.info("Erro menor que 1e-4")
-                break
-
-            beta = np.dot(z_next.T, z_next) / np.dot(z.T, z)
-            p = z_next + beta * p
-            r = r_next
-            z = z_next
-            
+                
             iter_count += 1            
             if antigo < i//porc:
                 antigo+=1
@@ -336,21 +306,22 @@ class Servidor:
         return f, iter_count
     
     
-    def calcular_CGNR_H_2(self, g:np.ndarray) -> tuple[np.ndarray, int]:
-        f = np.zeros(self.__H_2.shape[1])  # Inicializa f como um vetor de zeros
-        r = g - np.dot(self.__H_2, f)
-        z = np.dot(self.__H_2.T, r)
+    def calcular_CGNR(self, g:np.ndarray, modelo:str) -> tuple[np.ndarray, int]:
+        # Inicializa f como um vetor de zeros
+        f = np.zeros(self.__H_1.shape[1]) if modelo == "H_1" else np.zeros(self.__H_2.shape[1])
+        r = g - np.dot(self.__H_1, f) if modelo == "H_1" else g - np.dot(self.__H_2, f)
+        z = np.dot(self.__H_1.T, r) if modelo == "H_1" else np.dot(self.__H_2.T, r)
         p = z
         iter_count = 0
 
         porc = len(g)//100
         antigo = -1
         for i in range(len(g)):
-            w = np.dot(self.__H_2, p)
+            w = np.dot(self.__H_1, p) if modelo == "H_1" else np.dot(self.__H_2, p)
             alpha = np.dot(z.T, z) / np.dot(w.T, w)
             f = f + alpha * p
             r_next = r - alpha * w
-            z_next = np.dot(self.__H_2.T, r_next)
+            z_next = np.dot(self.__H_1.T, r_next) if modelo == "H_1" else np.dot(self.__H_2.T, r_next)
 
             error = abs(np.linalg.norm(r, ord = 2) - np.linalg.norm(r_next, ord = 2))
             if error < 1e-4:
@@ -361,7 +332,7 @@ class Servidor:
             p = z_next + beta * p
             r = r_next
             z = z_next
-            
+                
             iter_count += 1            
             if antigo < i//porc:
                 antigo+=1
@@ -405,16 +376,10 @@ class Servidor:
         
         resultado = None
         iter_count = 0
-        if modelo == "H_1":
-            if modelo_algoritmo == "CGNE":
-                resultado, iter_count = self.calcular_CGNE_H_1(ganho_de_sinal)
-            else:
-                resultado, iter_count = self.calcular_CGNR_H_1(ganho_de_sinal)
+        if modelo_algoritmo == "CGNE":
+            resultado, iter_count = self.calcular_CGNE(ganho_de_sinal, modelo)
         else:
-            if modelo_algoritmo == "CGNE":
-                resultado, iter_count = self.calcular_CGNE_H_2(ganho_de_sinal)
-            else:
-                resultado, iter_count = self.calcular_CGNR_H_2(ganho_de_sinal)
+            resultado, iter_count = self.calcular_CGNR(ganho_de_sinal, modelo)
             
         len_image  = int(np.sqrt(len(resultado)))
         resultado = resultado.reshape((len_image, len_image), order='F')
@@ -433,9 +398,9 @@ class Servidor:
             f"Tempo Total (s): {total_time:.2f}\n"
             f"Uso de CPU (%): {cpu_usage:.2f}\n"
             f"Uso de Memória (MB): {memory_usage:.2f}"
-        )        
+        )
+        
         #relatorio 
-
         plt.imshow(resultado, 'gray')
         plt.title('Relatório de Desempenho')
         plt.gcf().text(0.02, 0.5, informacoes, fontsize=10, color='white', ha='left', va='center', bbox=dict(facecolor='black', alpha=0.5))
@@ -445,8 +410,7 @@ class Servidor:
         
         self.logger.info(f"Relatório de desempenho salvo em content/{nome_arquivo}.png")
         self.mensagem_envio(cliente_socket, endereco, 'OK-Processo terminado')
-        
-        #return res_image, iter_count
+
 
     def processar_cliente(self):
         self.semaforo.acquire()
@@ -457,6 +421,7 @@ class Servidor:
             self.opcoes_servidor(cliente_socket, endereco)
         finally:
             self.semaforo.release()
+            
 
     def run(self) -> None:
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -474,6 +439,7 @@ class Servidor:
         print('Esperando resposta...')
 
         while iniciar_server:
+            self.__server_socket.settimeout(60)
             cliente_socket, endereco = self.__server_socket.accept()
             self.__clientes.append(cliente_socket)
 
@@ -481,6 +447,7 @@ class Servidor:
 
             thread = th.Thread(target=self.processar_cliente, daemon=True)
             thread.start()
+
 
 if __name__ == "__main__":
     server = Servidor()

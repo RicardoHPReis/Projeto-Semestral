@@ -29,7 +29,7 @@ class Cliente:
         self.__TAM_BUFFER = 2048
 
         self.__conexao_socket = s.socket(s.AF_INET, s.SOCK_STREAM)
-        #self.__conexao_socket.settimeout(None)
+        #self.__conexao_socket.settimeout(60)
     
     
     def __del__(self):
@@ -303,32 +303,32 @@ class Cliente:
         
         opcao = int(input("Escolha uma opção: "))
         match opcao:
-            case 0:
+            case 1:
                 for _ in range(10):
                     self.mensagem_envio('OPTION-1-Solicitar arquivo aleatório')
                     self.aleatorizar_imagens()
                     self.enviar_modelo()
                     self.__ganho_de_sinal = None
                     t.sleep(r.uniform(1, 5))
-            case 1:
-                self.mensagem_envio('OPTION-1-Solicitar arquivo aleatório')
+            case 2:
+                self.mensagem_envio('OPTION-2-Solicitar arquivo aleatório')
                 self.aleatorizar_imagens()
                 self.enviar_modelo()
                 self.__ganho_de_sinal = None
                 self.opcoes_cliente()
-            case 2:
-                self.mensagem_envio('OPTION-2-Solicitar arquivo específico')
+            case 3:
+                self.mensagem_envio('OPTION-3-Solicitar arquivo específico')
                 self.escolher_arquivo()
                 self.enviar_modelo()
                 self.__ganho_de_sinal = None
                 self.opcoes_cliente()
-            case 3:
-                self.mensagem_envio('OPTION-3-Receber Resultados')
+            case 4:
+                self.mensagem_envio('OPTION-4-Receber Resultados')
                 self.requisitar_relatorio()
                 self.__ganho_de_sinal = None
                 self.opcoes_cliente()
-            case 4:
-                self.mensagem_envio('OPTION-4-Fechar conexão')
+            case 5:
+                self.mensagem_envio('OPTION-5-Fechar conexão')
                 self.fechar_conexao()
             case _:
                 print('A escolha precisa estar nas opções acima!')
